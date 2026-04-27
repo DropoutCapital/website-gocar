@@ -52,7 +52,6 @@ const transEs: Record<TransEN, string> = {
 interface VehicleGridCardProps {
   vehicle: Vehicle;
   cardTitleField?: 'model' | 'brand';
-  newBadgeText?: string;
   showBadgeCondition?: boolean;
   showBadgePromo?: boolean;
   showBadgeNew?: boolean;
@@ -88,7 +87,6 @@ const Tag = ({ text, primary = false }: { text: string; primary?: boolean }) => 
 const VehicleGridCard = ({
   vehicle,
   cardTitleField = 'model',
-  newBadgeText = 'Nuevo',
   showBadgeCondition = true,
   showBadgePromo = true,
   showBadgeNew = true,
@@ -120,19 +118,8 @@ const VehicleGridCard = ({
     return new Date(vehicle.created_at) > fiveDaysAgo;
   };
 
-  // Badge promocional
-  const promoBadgeText = (() => {
-    if (!showBadgePromo) return undefined;
-    if (vehicle.label) return vehicle.label;
-    if (!isUnavailable && isNew()) {
-      const opts = ['Nuevo', 'Recién llegado', 'Oportunidad', 'Destacado'];
-      const hash = vehicle.id
-        ? vehicle.id.toString().split('').reduce((a, b) => a + b.charCodeAt(0), 0)
-        : Math.floor(Math.random() * 1000);
-      return newBadgeText === 'Nuevo' ? opts[hash % opts.length] : newBadgeText;
-    }
-    return undefined;
-  })();
+  // Badge promocional: solo etiquetas explícitas de la DB, sin auto-generación.
+  const promoBadgeText = showBadgePromo ? (vehicle.label || undefined) : undefined;
 
   const goDetails = () => {
     if (!isUnavailable && vehicle.id) router.push(`/vehicles/${vehicle.id}`);
