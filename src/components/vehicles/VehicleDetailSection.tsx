@@ -558,6 +558,13 @@ export default function VehicleDetailSection({
                   `Hola, me interesa el ${v.brand?.name} ${v?.model?.name} ${v.year} que vi en ${typeof window !== 'undefined' ? window.location.href : ''}`
                 )}
                 target="_blank"
+                onPress={() => {
+                  const fbq = (window as Window & { fbq?: (...args: unknown[]) => void }).fbq;
+                  fbq?.('track', 'Contact', {
+                    content_ids: [String(v.id)],
+                    content_type: 'vehicle',
+                  });
+                }}
                 className="sm:flex-1 bg-[#24d465]"
                 aria-label={t('vehicles.card.contact')}
                 style={{ color: '#fff', borderColor: '#0e7c3d' }}
