@@ -18,6 +18,17 @@ interface SocialLink {
   url: string;
 }
 
+// Empty stays empty (icon hides). WhatsApp accepts a bare phone → https://wa.me/<digits>.
+const normalizeSocialUrl = (platform: string, raw: string): string => {
+  const v = (raw || '').trim();
+  if (!v || v === '#') return '';
+  if (platform === 'whatsapp' && !/^https?:\/\//i.test(v)) {
+    const digits = v.replace(/[^\d]/g, '');
+    return digits ? `https://wa.me/${digits}` : '';
+  }
+  return v;
+};
+
 interface FooterProps {
   columns?: FooterColumn[];
   bgColor?: string;
@@ -56,9 +67,9 @@ export const Footer = ({
   socialIconBgColor = 'rgba(255, 255, 255, 0.08)',
   showSocial = true,
   socialLinks = [
-    { platform: 'facebook', url: '#' },
-    { platform: 'instagram', url: '#' },
-    { platform: 'whatsapp', url: '#' },
+    { platform: 'facebook', url: '' },
+    { platform: 'instagram', url: '' },
+    { platform: 'whatsapp', url: '' },
   ],
   copyrightText = '',
   logoUrl = '',
@@ -123,23 +134,29 @@ export const Footer = ({
             ) : (
               <h3 className='text-xl font-bold mb-4' style={{ color: headingColor }}>&nbsp;</h3>
             )}
-            {showSocial && socialLinks.length > 0 && (
-              <div className='flex items-center gap-3 mt-4'>
-                {socialLinks.map((social, index) => (
-                  <a
-                    key={index}
-                    href={social.url}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    onClick={handleSocialClick}
-                    className='p-2 rounded-full transition-colors duration-200 hover:opacity-80'
-                    style={{ color: textColor, backgroundColor: socialIconBgColor }}
-                  >
-                    <SocialIcon platform={social.platform} size={18} />
-                  </a>
-                ))}
-              </div>
-            )}
+            {showSocial && (() => {
+              const visible = socialLinks
+                .map((s) => ({ ...s, url: normalizeSocialUrl(s.platform, s.url) }))
+                .filter((s) => s.url);
+              if (visible.length === 0) return null;
+              return (
+                <div className='flex items-center gap-3 mt-4'>
+                  {visible.map((social, index) => (
+                    <a
+                      key={index}
+                      href={social.url}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      onClick={handleSocialClick}
+                      className='p-2 rounded-full transition-colors duration-200 hover:opacity-80'
+                      style={{ color: textColor, backgroundColor: socialIconBgColor }}
+                    >
+                      <SocialIcon platform={social.platform} size={18} />
+                    </a>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Link columns */}
@@ -192,9 +209,9 @@ Footer.craft = {
     socialIconBgColor: 'rgba(255, 255, 255, 0.08)',
     showSocial: true,
     socialLinks: [
-      { platform: 'facebook', url: '#' },
-      { platform: 'instagram', url: '#' },
-      { platform: 'whatsapp', url: '#' },
+      { platform: 'facebook', url: '' },
+      { platform: 'instagram', url: '' },
+      { platform: 'whatsapp', url: '' },
     ],
     copyrightText: '',
     logoUrl: '',
