@@ -7,6 +7,18 @@ import { normalizeBuilderLink } from '@/utils/functions';
 interface FooterLink { text: string; url: string; }
 interface FooterColumn { title: string; links: FooterLink[]; }
 interface SocialLink { platform: 'facebook' | 'instagram' | 'twitter' | 'youtube' | 'linkedin' | 'whatsapp'; url: string; }
+
+// Empty stays empty (icon hides). WhatsApp accepts a bare phone → https://wa.me/<digits>.
+const normalizeSocialUrl = (platform: string, raw: string): string => {
+  const v = (raw || '').trim();
+  if (!v || v === '#') return '';
+  if (platform === 'whatsapp' && !/^https?:\/\//i.test(v)) {
+    const digits = v.replace(/[^\d]/g, '');
+    return digits ? `https://wa.me/${digits}` : '';
+  }
+  return v;
+};
+
 interface FooterModernoProps {
   companyName?: string; description?: string; columns?: FooterColumn[];
   socialLinks?: SocialLink[]; copyrightText?: string; bgColor?: string; textColor?: string;
@@ -32,7 +44,7 @@ export const FooterModerno = ({
     { title: 'Servicios', links: [{ text: 'Financiamiento', url: '#financing' }, { text: 'Garantía', url: '#warranty' }, { text: 'Test Drive', url: '#testdrive' }] },
     { title: 'Legal', links: [{ text: 'Términos y condiciones', url: '#terms' }, { text: 'Política de privacidad', url: '#privacy' }] },
   ],
-  socialLinks = [{ platform: 'facebook', url: '#' }, { platform: 'instagram', url: '#' }, { platform: 'whatsapp', url: '#' }],
+  socialLinks = [{ platform: 'facebook', url: '' }, { platform: 'instagram', url: '' }, { platform: 'whatsapp', url: '' }],
   copyrightText = '', bgColor = '#0f172a', textColor = '#94a3b8',
   headingColor = '#ffffff', accentColor = '#3b82f6',
   dividerColor = 'rgba(255,255,255,0.08)', socialIconBgColor = 'rgba(255,255,255,0.06)',
@@ -67,17 +79,23 @@ export const FooterModerno = ({
               <h3 className="text-xl font-semibold mb-4 tracking-tight" style={{ color: headingColor }} dangerouslySetInnerHTML={{ __html: finalName || '' }} />
             )}
             <p className="text-[14px] leading-relaxed mb-6" style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: description || '' }} />
-            {socialLinks.length > 0 && (
-              <div className="flex items-center gap-2">
-                {socialLinks.map((social, index) => (
-                  <a key={index} href={social.url} target="_blank" rel="noopener noreferrer"
-                    className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
-                    style={{ backgroundColor: socialIconBgColor, color: textColor }}>
-                    <SocialIcon platform={social.platform} />
-                  </a>
-                ))}
-              </div>
-            )}
+            {(() => {
+              const visible = socialLinks
+                .map((s) => ({ ...s, url: normalizeSocialUrl(s.platform, s.url) }))
+                .filter((s) => s.url);
+              if (visible.length === 0) return null;
+              return (
+                <div className="flex items-center gap-2">
+                  {visible.map((social, index) => (
+                    <a key={index} href={social.url} target="_blank" rel="noopener noreferrer"
+                      className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
+                      style={{ backgroundColor: socialIconBgColor, color: textColor }}>
+                      <SocialIcon platform={social.platform} />
+                    </a>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
           {columns.map((col, i) => (
             <div key={i} className="lg:col-span-2 lg:col-start-auto">
@@ -107,7 +125,7 @@ FooterModerno.craft = {
       { title: 'Servicios', links: [{ text: 'Financiamiento', url: '#financing' }, { text: 'Garantía', url: '#warranty' }, { text: 'Test Drive', url: '#testdrive' }] },
       { title: 'Legal', links: [{ text: 'Términos y condiciones', url: '#terms' }, { text: 'Política de privacidad', url: '#privacy' }] },
     ],
-    socialLinks: [{ platform: 'facebook', url: '#' }, { platform: 'instagram', url: '#' }, { platform: 'whatsapp', url: '#' }],
+    socialLinks: [{ platform: 'facebook', url: '' }, { platform: 'instagram', url: '' }, { platform: 'whatsapp', url: '' }],
     copyrightText: '', bgColor: '#0f172a', textColor: '#94a3b8',
     headingColor: '#ffffff', accentColor: '#3b82f6',
     dividerColor: 'rgba(255,255,255,0.08)', socialIconBgColor: 'rgba(255,255,255,0.06)',
