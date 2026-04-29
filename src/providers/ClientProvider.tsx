@@ -34,8 +34,10 @@ export function ClientProvider({ children }: { children: React.ReactNode }) {
 
       if (clientData) {
         setClient(clientData);
-        // Fetch vehicles for this client, including demo vehicles if has_demo is true
-        await fetchVehicles(clientData.id, clientData.has_demo);
+        // Fire-and-forget: vehicles fetch joins 10 tables and can take seconds.
+        // Don't block the site shell on it — useVehiclesStore.isLoading will keep
+        // vehicle-listing components in skeleton state until it lands.
+        void fetchVehicles(clientData.id, clientData.has_demo);
 
         // Initialize language from client default if no user preference is persisted
         try {
