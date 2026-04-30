@@ -22,6 +22,7 @@ interface BuilderNavbarProps {
   logoHeight?: number;
   showLogo?: boolean;
   sticky?: boolean;
+  transparentOnTop?: boolean;
 }
 
 /** Sun icon */
@@ -77,6 +78,7 @@ export const BuilderNavbar = ({
   logoHeight = 36,
   showLogo = true,
   sticky = true,
+  transparentOnTop = true,
 }: BuilderNavbarProps) => {
   const { connectors } = useNode();
   const { client } = useClientStore();
@@ -105,15 +107,16 @@ export const BuilderNavbar = ({
     setMobileOpen(false);
   }, [pathname]);
 
-  // Scroll state — transparent at top, solid on scroll
+  // Scroll state — transparent at top, solid on scroll.
+  // Solo se trackea cuando el efecto está habilitado y el navbar es sticky.
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    if (!sticky || isEnabled) return;
+    if (!sticky || !transparentOnTop || isEnabled) return;
     const onScroll = () => setScrolled(window.scrollY > 20);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, [sticky, isEnabled]);
+  }, [sticky, transparentOnTop, isEnabled]);
 
   const primaryColor = client?.theme?.light?.primary || '#e05d31';
   const finalCtaBgColor = ctaBgColor || primaryColor;
@@ -137,8 +140,9 @@ export const BuilderNavbar = ({
   const effectiveBg = theme === 'dark' && !isDarkBg ? '#141414' : bgColor;
   const effectiveText = theme === 'dark' && !isDarkBg ? '#d4d4d4' : textColor;
 
-  // In builder editor, always show solid bg
-  const showSolidBg = isEnabled || scrolled;
+  // En editor: siempre sólido. Si el efecto está apagado: siempre sólido.
+  // Con efecto encendido: transparente arriba, sólido al scrollear.
+  const showSolidBg = isEnabled || !transparentOnTop || scrolled;
 
   // Active route detection
   const isActiveLink = useCallback((url: string) => {
@@ -335,6 +339,7 @@ BuilderNavbar.craft = {
     logoHeight: 36,
     showLogo: true,
     sticky: true,
+    transparentOnTop: true,
   },
   rules: {
     canDrag: () => true,
