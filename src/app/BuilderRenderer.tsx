@@ -80,6 +80,10 @@ interface FormEmbedProps {
   textColor?: string;
   accentColor?: string;
   variant?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  showEmail?: boolean;
+  showPhone?: boolean;
 }
 
 function deriveColors(bgColor?: string) {
@@ -94,10 +98,13 @@ function deriveColors(bgColor?: string) {
 }
 
 // ── Financing ──
-const FinancingFormEmbed = ({ bgColor = '#ffffff', textColor = '#111827', accentColor = '#3b82f6', title, subtitle }: FormEmbedProps) => {
+const FinancingFormEmbed = ({ bgColor = '#ffffff', textColor = '#111827', accentColor = '#3b82f6', title, subtitle, contactEmail, contactPhone, showEmail = true, showPhone = true }: FormEmbedProps) => {
   const { connectors } = useNode();
   const { cardBg, cardBorder, infoBg, subtextColor } = deriveColors(bgColor);
   const { client } = useClientStore();
+  const finalEmail = contactEmail || client?.contact?.email || '';
+  const finalPhone = contactPhone || client?.contact?.phone || '';
+  const showContactBlock = showEmail || showPhone;
   return (
     <div ref={(el: HTMLDivElement | null) => { if (el) connectors.connect(el); }} style={{ backgroundColor: bgColor, color: textColor }} className="w-full py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
       {title && <div className="text-center mb-10 max-w-3xl mx-auto"><h1 className="text-3xl sm:text-4xl font-extrabold" style={{ color: textColor }}>{title}</h1>{subtitle && <p className="mt-4 text-lg" style={{ color: subtextColor }}>{subtitle}</p>}</div>}
@@ -124,13 +131,19 @@ const FinancingFormEmbed = ({ bgColor = '#ffffff', textColor = '#111827', accent
                 ))}
               </ul>
             </div>
-            <div>
-              <h3 className="text-lg font-medium mb-3" style={{ color: textColor }}>{'Contacto directo'}</h3>
-              <div className="space-y-2">
-                <p className="text-sm" style={{ color: subtextColor }}>{client?.contact?.email || ''}</p>
-                <p className="text-sm" style={{ color: subtextColor }}>{client?.contact?.phone || ''}</p>
+            {showContactBlock && (
+              <div>
+                <h3 className="text-lg font-medium mb-3" style={{ color: textColor }}>{'Contacto directo'}</h3>
+                <div className="space-y-2">
+                  {showEmail && finalEmail && (
+                    <p className="text-sm" style={{ color: subtextColor }}>{finalEmail}</p>
+                  )}
+                  {showPhone && finalPhone && (
+                    <p className="text-sm" style={{ color: subtextColor }}>{finalPhone}</p>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
