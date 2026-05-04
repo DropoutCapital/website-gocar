@@ -34,6 +34,9 @@ interface VehicleCarouselProps {
   autoplay?: boolean;
   autoplaySpeed?: number;
   itemsToShow?: number;
+  // 'available' = vehículos disponibles (default).
+  // 'sold' = recién vendidos, ordenados por fecha de venta desc.
+  mode?: 'available' | 'sold';
   showStatuses?: ('Publicado' | 'Vendido' | 'Reservado')[];
   cardSettings?: {
     cardBgColor: string;
@@ -68,6 +71,7 @@ export const VehicleCarousel = ({
   autoplay = true,
   autoplaySpeed = 5000,
   itemsToShow = 3,
+  mode = 'available',
   showStatuses = ['Publicado', 'Vendido', 'Reservado'],
   cardSettings = [
     {
@@ -239,17 +243,24 @@ export const VehicleCarousel = ({
           threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
           threeDaysAgo.setHours(0, 0, 0, 0); // Optional: Compare against the start of the day
 
-          // Filter vehicles that should be visible on web
-          // Use show_in_web field if defined, fallback to name-based logic for backward compatibility
+          // Filter vehicles según mode:
+          // - mode='sold': solo vendidos recientes (ventana de 3 días por event_date).
+          // - mode='available': comportamiento histórico (todos los estados visibles).
           const activelyFilteredVehicles = vehiclesData.filter((vehicle) => {
             if (!vehicle.status) return false;
+            const isSold = vehicle.status.name === 'Vendido';
+
+            if (mode === 'sold') {
+              if (!isSold) return false;
+              if (!vehicle.event_date) return false;
+              return new Date(vehicle.event_date) >= threeDaysAgo;
+            }
 
             // Determine if vehicle should be shown based on show_in_web or fallback to names
             let shouldShow = false;
             if (typeof vehicle.status.show_in_web === 'boolean') {
               shouldShow = vehicle.status.show_in_web;
             } else {
-              // Fallback: use name-based filtering for legacy states without show_in_web
               shouldShow = statusValues.includes(vehicle.status.name as any);
             }
 
@@ -264,10 +275,21 @@ export const VehicleCarousel = ({
                 const eventDate = new Date(vehicle.event_date);
                 return eventDate >= threeDaysAgo;
               }
-              return false; // If no event_date for sold/reserved, exclude it
+              return false;
             }
-            return true; // Keep other visible statuses
+            return true;
           });
+
+          // mode='sold': ordenar por event_date (fecha de venta) desc
+          if (mode === 'sold') {
+            const sortedSold = [...activelyFilteredVehicles].sort((a, b) => {
+              const dateA = a.event_date ? new Date(a.event_date).getTime() : 0;
+              const dateB = b.event_date ? new Date(b.event_date).getTime() : 0;
+              return dateB - dateA;
+            });
+            setVehicles(sortedSold);
+            return;
+          }
 
           // Ordenar para que los vehículos con estado "Publicado" aparezcan primero y luego por precio
           const sortedVehicles = [...activelyFilteredVehicles].sort((a, b) => {
@@ -442,6 +464,7 @@ VehicleCarousel.craft = {
     autoplay: 'true',
     autoplaySpeed: 50,
     itemsToShow: '3',
+    mode: 'available',
     showStatuses: [{ status: 'Publicado' }],
     cardSettings: [
       {
