@@ -2,6 +2,7 @@
 
 import { Card, CardBody, CardFooter } from '@heroui/react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Calendar, Gauge, Settings, Fuel, Car } from 'lucide-react';
 import { Vehicle } from '../../utils/types';
 import { useCurrency } from '@/hooks/useCurrency';
@@ -208,9 +209,12 @@ const VehicleGridCard = ({
       >
         <div className="relative w-full aspect-[16/9] overflow-hidden bg-black">
           {vehicle.main_image ? (
-            <div
-              className="absolute inset-0 bg-center bg-cover"
-              style={{ backgroundImage: `url(${vehicle.main_image})` }}
+            <Image
+              src={vehicle.main_image}
+              alt={`${vehicle.brand?.name ?? ''} ${vehicle.model?.name ?? ''}`.trim() || 'Vehículo'}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+              className="object-cover"
             />
           ) : (
             <div className="absolute inset-0 grid place-items-center bg-neutral-200 dark:bg-neutral-900">

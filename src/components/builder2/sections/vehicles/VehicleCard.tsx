@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -239,10 +240,12 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
         className={`relative ${compact ? 'h-48' : 'h-64'} overflow-hidden bg-gray-100`}
       >
         {main_image ? (
-          <img
+          <Image
             src={main_image}
-            alt={`${brand?.name} ${model?.name}`}
-            className='w-full h-full object-cover transition-transform duration-300 group-hover:scale-105'
+            alt={`${brand?.name ?? ''} ${model?.name ?? ''}`.trim() || 'Vehículo'}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className='object-cover transition-transform duration-300 group-hover:scale-105'
             style={{ cursor: 'pointer' }}
           />
         ) : (

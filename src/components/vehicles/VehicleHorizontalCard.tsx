@@ -3,10 +3,10 @@ import {
   Card,
   CardBody,
   CardFooter,
-  Image,
   Chip,
   Divider,
 } from '@heroui/react';
+import Image from 'next/image';
 import { Vehicle } from '../../utils/types';
 import { useRouter } from 'next/navigation';
 import {
@@ -67,7 +67,7 @@ const VehicleHorizontalCard = ({
       }`}
     >
       <div className='w-[300px] flex-shrink-0'>
-        <div className='relative w-full h-full'>
+        <div className='relative w-full h-full min-h-[225px]'>
           {isSold && (
             <div className='absolute top-0 right-0 h-[200px] w-[200px] overflow-hidden z-50 rotate-0'>
               <div className='absolute top-[30px] right-[-50px] bg-sold text-white font-bold py-2 w-[250px] text-center transform rotate-45'>
@@ -82,11 +82,15 @@ const VehicleHorizontalCard = ({
               </div>
             </div>
           )}
-          <Image
-            alt={`${vehicle.brand?.name} ${vehicle.model?.name}`}
-            className='object-cover h-full w-full'
-            src={vehicle.main_image}
-          />
+          {vehicle.main_image && (
+            <Image
+              src={vehicle.main_image}
+              alt={`${vehicle.brand?.name ?? ''} ${vehicle.model?.name ?? ''}`.trim() || 'Vehículo'}
+              fill
+              sizes="300px"
+              className='object-cover'
+            />
+          )}
           {(vehicle.label || (isNew() && !isSold && !isReserved)) && (
             <div className='absolute top-2 right-2 z-20'>
               <Chip
