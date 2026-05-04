@@ -80,6 +80,12 @@ export default function BuilderPageWrapper({ slug, fallback }: Props) {
 
   if (isLoading || !client?.id) return <div className="min-h-screen" />;
 
+  // elements_structure se carga en background (puede ser 10+ MB para tenants pesados).
+  // Mientras llega, no mostrar fallback templates (causaría un cambio de UI completo
+  // cuando llegue la config real). Mostrar pantalla vacía hasta que llegue.
+  const isStructurePending = cfg?.is_enabled && !cfg?.elements_structure;
+  if (isStructurePending) return <div className="min-h-screen" />;
+
   const cached = cache.get(slug);
   if (!cached) return <>{fallback}</>;
 
