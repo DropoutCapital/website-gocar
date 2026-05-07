@@ -9,3 +9,4 @@ export { HeroSearchBanner } from './HeroSearchBanner';
 export { HeroImageDivided } from './HeroImageDivided';
 export { HeroWithLogo } from './HeroWithLogo';
 export { HeroWelcome } from './HeroWelcome';
+export { HeroWithVideoEmbed } from './HeroWithVideoEmbed';

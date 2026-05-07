@@ -21,6 +21,7 @@ import {
   HeroImageDivided,
   HeroWithLogo,
   HeroWelcome,
+  HeroWithVideoEmbed,
 } from '@/components/builder2/sections/initialfold';
 import { HeroMinimalistic } from '@/components/builder2/sections/initialfold/HeroMinimalistic';
 import { VehicleGrid } from '@/components/builder2/sections/vehicles';
@@ -380,7 +381,7 @@ export const baseResolver: Record<string, any> = {
   Container, Text, Image,
   HeroBasic, HeroWithImage, HeroWithBackground, HeroWithCard, HeroCarSearch,
   HeroFeatureCards, HeroTestimonial, HeroSearchBanner, HeroImageDivided,
-  HeroWithLogo, HeroWelcome, HeroMinimalistic,
+  HeroWithLogo, HeroWelcome, HeroMinimalistic, HeroWithVideoEmbed,
   VehicleGrid, VehicleGrid2, VehicleCarousel, TraditionalVehicleGrid,
   WhyChooseUs, FAQ, Testimonials, TraditionalWhyUs,
   ContactCTA, TraditionalContactCTA: BuilderTraditionalContactCTA,
