@@ -170,7 +170,7 @@ export const VehicleCarousel = ({
             created_at,
             label,
             transmission,
-            status:status_id(id, name, show_in_web),
+            status:status_id(id, name, show_in_web, web_visibility_days),
             brand:brand_id(id, name),
             model:model_id(id, name),
             category:category_id(id, name),
@@ -239,21 +239,36 @@ export const VehicleCarousel = ({
           console.log('vehicles data with event_date', vehiclesData);
           console.log('status values', statusValues);
 
-          const threeDaysAgo = new Date(); // Define threeDaysAgo once
-          threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-          threeDaysAgo.setHours(0, 0, 0, 0); // Optional: Compare against the start of the day
+          // Per-state visibility window: each clients_vehicles_states row may
+          // define web_visibility_days. NULL/<=0 = always show (no time filter).
+          // A positive integer = show only when event_date is within that many
+          // days. Replaces the previous hardcoded 3-day window.
+          const isWithinWindow = (
+            eventDateStr: string | undefined,
+            days: number | null | undefined
+          ): boolean => {
+            if (!days || days <= 0) return true; // no window configured
+            if (!eventDateStr) return false;     // window set but no event_date → hide
+            const cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - days);
+            cutoff.setHours(0, 0, 0, 0);
+            return new Date(eventDateStr) >= cutoff;
+          };
 
           // Filter vehicles según mode:
-          // - mode='sold': solo vendidos recientes (ventana de 3 días por event_date).
-          // - mode='available': comportamiento histórico (todos los estados visibles).
+          // - mode='sold': solo vendidos, respetando la ventana del estado.
+          // - mode='available': comportamiento histórico (estados visibles + ventana propia).
           const activelyFilteredVehicles = vehiclesData.filter((vehicle) => {
             if (!vehicle.status) return false;
+            const stateDays = (vehicle.status as any).web_visibility_days as
+              | number
+              | null
+              | undefined;
             const isSold = vehicle.status.name === 'Vendido';
 
             if (mode === 'sold') {
               if (!isSold) return false;
-              if (!vehicle.event_date) return false;
-              return new Date(vehicle.event_date) >= threeDaysAgo;
+              return isWithinWindow(vehicle.event_date, stateDays);
             }
 
             // Determine if vehicle should be shown based on show_in_web or fallback to names
@@ -265,19 +280,7 @@ export const VehicleCarousel = ({
             }
 
             if (!shouldShow) return false;
-
-            // Apply 3-day filter for Vendido/Reservado
-            if (
-              vehicle.status.name === 'Vendido' ||
-              vehicle.status.name === 'Reservado'
-            ) {
-              if (vehicle.event_date) {
-                const eventDate = new Date(vehicle.event_date);
-                return eventDate >= threeDaysAgo;
-              }
-              return false;
-            }
-            return true;
+            return isWithinWindow(vehicle.event_date, stateDays);
           });
 
           // mode='sold': ordenar por event_date (fecha de venta) desc
