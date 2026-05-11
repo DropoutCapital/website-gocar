@@ -54,6 +54,9 @@ import { Footer } from '@/components/builder2/sections/layout/Footer';
 import { StatsCounter } from '@/components/builder2/sections/marketing/StatsCounter';
 import { PromoBanner } from '@/components/builder2/sections/marketing/PromoBanner';
 import { AwardsBadges } from '@/components/builder2/sections/marketing/AwardsBadges';
+import { LogoCloud } from '@/components/builder2/sections/marketing/LogoCloud';
+import { LogoMarquee } from '@/components/builder2/sections/marketing/LogoMarquee';
+import { LogoGrid } from '@/components/builder2/sections/marketing/LogoGrid';
 import { PhotoGallery } from '@/components/builder2/sections/media/PhotoGallery';
 import { TeamMembers } from '@/components/builder2/sections/team/TeamMembers';
 
@@ -390,7 +393,7 @@ export const baseResolver: Record<string, any> = {
   VideoEmbed,
   HeroModerno, StatsModerno, TestimonialsModerno, CTAModerno, FooterModerno,
   HeroPremium, FeatureShowcase, TestimonialsPremium, GalleryPremium, CTAPremium,
-  BuilderNavbar, Footer, StatsCounter, PromoBanner, AwardsBadges, PhotoGallery, TeamMembers,
+  BuilderNavbar, Footer, StatsCounter, PromoBanner, AwardsBadges, LogoCloud, LogoMarquee, LogoGrid, PhotoGallery, TeamMembers,
   FinancingFormEmbed, ConsignmentsFormEmbed, BuyDirectFormEmbed, WeSearchFormEmbed, ContactFormEmbed, AboutContentEmbed,
   div: Unknown, p: Unknown, span: Unknown, img: Unknown, Unknown,
 };
