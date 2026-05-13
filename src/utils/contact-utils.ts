@@ -1,37 +1,54 @@
+type PhoneInput =
+  | string
+  | { phone?: string | null }
+  | null
+  | undefined;
+
 /**
- * Extrae y formatea un número de teléfono para WhatsApp desde la información de contacto
- * @param contact Objeto o string con la información de contacto
- * @returns Número de teléfono formateado para WhatsApp
+ * Normaliza un teléfono chileno al formato `569XXXXXXXX` (11 dígitos, sin "+").
+ * Acepta string, objeto `{ phone }` o JSON-string. Devuelve `null` si el número
+ * no puede normalizarse a un móvil chileno válido.
  */
-export const formatWhatsAppNumber = (contact: any) => {
-  try {
-    let phoneNumber = '';
+export const normalizeChilePhone = (phoneInput: PhoneInput): string | null => {
+  if (!phoneInput) return null;
 
-    // Extraer el número de teléfono según el tipo de datos
-    if (typeof contact === 'string') {
-      try {
-        // Intentar parsear como JSON
-        const contactData = JSON.parse(contact);
-        phoneNumber = contactData.phone || contact;
-      } catch (e) {
-        // Si no es JSON válido, usar el string directamente
-        phoneNumber = contact;
-      }
-    } else if (typeof contact === 'object' && contact.phone) {
-      phoneNumber = contact.phone;
+  let raw = '';
+  if (typeof phoneInput === 'string') {
+    try {
+      const parsed = JSON.parse(phoneInput);
+      raw = parsed?.phone || phoneInput;
+    } catch {
+      raw = phoneInput;
     }
-
-    const cleanPhone = phoneNumber.replace(/\s+/g, '').replace(/[()-]/g, '');
-
-    // Dar formato adecuado para WhatsApp
-    if (cleanPhone.startsWith('+')) {
-      return cleanPhone.substring(1); // WhatsApp no necesita el +
-    } else if (cleanPhone.startsWith('56')) {
-      return cleanPhone;
-    } else {
-      return `56${cleanPhone}`;
-    }
-  } catch (error) {
-    console.error('Error al formatear número de WhatsApp:', error);
+  } else if (typeof phoneInput === 'object' && phoneInput.phone) {
+    raw = phoneInput.phone;
   }
+
+  if (!raw) return null;
+
+  const d = raw.replace(/\D/g, '');
+
+  if (d.length === 11 && d.startsWith('569')) return d;
+  if (d.length === 9 && d.startsWith('9')) return `56${d}`;
+  if (d.length === 8) return `569${d}`;
+  if (d.length === 10 && d.startsWith('56')) return `569${d.slice(2)}`;
+  if (d.length === 12 && d.startsWith('0569')) return d.slice(1);
+  if (d.length === 13 && d.startsWith('00569')) return d.slice(2);
+
+  return null;
+};
+
+/**
+ * Construye la URL completa de WhatsApp con número chileno normalizado y mensaje
+ * pre-rellenado opcional. Devuelve `null` si el número no es válido, para que el
+ * caller pueda decidir no mostrar el botón en vez de generar un link roto.
+ */
+export const buildWhatsAppUrl = (
+  phoneInput: PhoneInput,
+  message?: string
+): string | null => {
+  const normalized = normalizeChilePhone(phoneInput);
+  if (!normalized) return null;
+  const encoded = message ? `?text=${encodeURIComponent(message)}` : '';
+  return `https://wa.me/${normalized}${encoded}`;
 };
