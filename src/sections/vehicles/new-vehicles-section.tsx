@@ -32,7 +32,7 @@ import useMediaQuery from '@/hooks/useMediaQuery';
 import useThemeStore from '@/store/useThemeStore';
 import Link from 'next/link';
 import useClientStore from '@/store/useClientStore';
-import { formatWhatsAppNumber } from '@/utils/contact-utils';
+import { buildWhatsAppUrl } from '@/utils/contact-utils';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import useVehicleFiltersStore from '@/store/useVehicleFiltersStore';
@@ -648,11 +648,7 @@ const NewVehiclesSection = ({ minimal = false, cardTitleField = 'model', filterS
     (cat) => cat.id === selectedCategory
   );
 
-  const whatsappNumber = client?.contact
-    ? formatWhatsAppNumber(client.contact)
-    : '56996366455';
-
-  const whatsappUrl = `https://wa.me/${whatsappNumber}`;
+  const whatsappUrl = buildWhatsAppUrl(client?.contact);
 
   // Estado para controlar la visibilidad de los botones flotantes en móvil
   const [showMobileButtons, setShowMobileButtons] = useState(false);
@@ -696,15 +692,17 @@ const NewVehiclesSection = ({ minimal = false, cardTitleField = 'model', filterS
         @media (min-width: 1024px) { .vehicle-grid-wrapper .vehicle-grid { grid-template-columns: repeat(var(--grid-lg), minmax(0, 1fr)); } }
         @media (min-width: 1280px) { .vehicle-grid-wrapper .vehicle-grid { grid-template-columns: repeat(var(--grid-xl), minmax(0, 1fr)); } }
       `}</style>
-      {/* Botón de WhatsApp - Siempre visible, derecha */}
-      <a
-        href={whatsappUrl}
-        target='_blank'
-        rel='noopener noreferrer'
-        className='fixed bottom-6 right-6 z-40 p-3 bg-[#25D366] rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200'
-      >
-        <Icon icon='logos:whatsapp-icon' className='text-xl' />
-      </a>
+      {/* Botón de WhatsApp - Siempre visible, derecha. Solo se muestra si el cliente tiene un número válido configurado. */}
+      {whatsappUrl && (
+        <a
+          href={whatsappUrl}
+          target='_blank'
+          rel='noopener noreferrer'
+          className='fixed bottom-6 right-6 z-[60] p-3 bg-[#25D366] rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200'
+        >
+          <Icon icon='logos:whatsapp-icon' className='text-xl' />
+        </a>
+      )}
 
       {/* Botones flotantes móvil - Solo visibles en sección vehículos, izquierda */}
       <div

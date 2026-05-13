@@ -36,6 +36,7 @@ import { ContactCTA } from '@/components/builder2/sections/contact/ContactCTA';
 import { TraditionalContactCTA as BuilderTraditionalContactCTA } from '@/components/builder2/sections/contact/TraditionalContactCTA';
 import HowToArrive from '@/sections/home/HowToArrive';
 import { TraditionalHowToArrive } from '@/components/builder2/sections/contact/TraditionalHowToArrive';
+import { FloatingWhatsApp } from '@/components/builder2/sections/contact/FloatingWhatsApp';
 // Moderna sections
 import { HeroModerno } from '@/components/builder2/sections/moderna/HeroModerno';
 import { StatsModerno } from '@/components/builder2/sections/moderna/StatsModerno';
@@ -390,7 +391,7 @@ export const baseResolver: Record<string, any> = {
   VehicleGrid, VehicleGrid2, VehicleCarousel, TraditionalVehicleGrid,
   WhyChooseUs, FAQ, Testimonials, TraditionalWhyUs,
   ContactCTA, TraditionalContactCTA: BuilderTraditionalContactCTA,
-  HowToArrive, TraditionalHowToArrive,
+  HowToArrive, TraditionalHowToArrive, FloatingWhatsApp,
   VideoEmbed,
   HeroModerno, StatsModerno, TestimonialsModerno, CTAModerno, FooterModerno,
   HeroPremium, FeatureShowcase, TestimonialsPremium, GalleryPremium, CTAPremium,
