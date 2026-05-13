@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Calendar, Gauge, Settings, Fuel, Car } from 'lucide-react';
 import { Vehicle } from '../../utils/types';
+import { readableTextOn } from '@/utils/colors';
 import { useCurrency } from '@/hooks/useCurrency';
 
 // =============================
@@ -73,18 +74,38 @@ interface VehicleGridCardProps {
 /* =============================
  * Tag minimalista y profesional
  * ============================= */
-const Tag = ({ text, primary = false }: { text: string; primary?: boolean }) => (
-  <span
-    className={`
-      px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide whitespace-nowrap
-      ${primary
-        ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
-        : 'bg-white/90 text-neutral-700 dark:bg-neutral-800/90 dark:text-neutral-200'}
-    `}
-  >
-    {text}
-  </span>
-);
+const Tag = ({
+  text,
+  primary = false,
+  bgColor,
+}: {
+  text: string;
+  primary?: boolean;
+  bgColor?: string;
+}) => {
+  if (bgColor) {
+    return (
+      <span
+        className="px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide whitespace-nowrap"
+        style={{ backgroundColor: bgColor, color: readableTextOn(bgColor) }}
+      >
+        {text}
+      </span>
+    );
+  }
+  return (
+    <span
+      className={`
+        px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide whitespace-nowrap
+        ${primary
+          ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
+          : 'bg-white/90 text-neutral-700 dark:bg-neutral-800/90 dark:text-neutral-200'}
+      `}
+    >
+      {text}
+    </span>
+  );
+};
 
 const VehicleGridCard = ({
   vehicle,
@@ -241,7 +262,13 @@ const VehicleGridCard = ({
           {/* Tags minimalistas en esquina superior izquierda */}
           {(promoBadgeText || leftChips.length > 0) && (
             <div className="absolute top-2.5 left-2.5 right-2.5 z-20 flex flex-wrap items-start gap-1.5">
-              {promoBadgeText && <Tag text={promoBadgeText} primary />}
+              {promoBadgeText && (
+                <Tag
+                  text={promoBadgeText}
+                  primary
+                  bgColor={vehicle.label ? vehicle.label_color : undefined}
+                />
+              )}
               {leftChips.map((txt, i) => (
                 <Tag key={i} text={txt} />
               ))}

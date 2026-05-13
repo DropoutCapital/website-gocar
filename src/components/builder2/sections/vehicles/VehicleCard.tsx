@@ -13,6 +13,7 @@ import {
 import { useEditor } from '@craftjs/core';
 import { SimpleVehicle } from './VehicleCarousel';
 import { useCurrency } from '@/hooks/useCurrency';
+import { readableTextOn } from '@/utils/colors';
 
 type FeatureKey = 'category' | 'year' | 'fuel' | 'mileage' | 'transmission';
 
@@ -264,7 +265,17 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
 
         {label && !isNotAvailable && (
           <div className='absolute top-2 right-2 z-10'>
-            <Badge className='bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full'>
+            <Badge
+              className='text-xs font-semibold px-2.5 py-1 rounded-full'
+              style={
+                vehicle.label_color
+                  ? {
+                      backgroundColor: vehicle.label_color,
+                      color: readableTextOn(vehicle.label_color),
+                    }
+                  : { backgroundColor: '#dcfce7', color: '#15803d' }
+              }
+            >
               {label}
             </Badge>
           </div>
