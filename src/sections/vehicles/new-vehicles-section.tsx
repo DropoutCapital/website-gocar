@@ -234,8 +234,8 @@ const CATEGORY_ICONS: Record<string, string> = {
 interface NewVehiclesSectionProps {
   /** Ocultar título y buscador (para landing page) */
   minimal?: boolean;
-  /** Which field to use as card title: 'model' (default) or 'brand' */
-  cardTitleField?: 'model' | 'brand';
+  /** Which field to use as card title: 'model' (default), 'brand' or 'brand_model' */
+  cardTitleField?: 'model' | 'brand' | 'brand_model';
   /** Filter style: 'buttons' (default, icon+text) or 'images' (photo cards) */
   filterStyle?: 'buttons' | 'images';
   /** Builder color overrides */
