@@ -22,7 +22,7 @@ interface TraditionalVehicleGridProps {
   categoryImage_Van?: string;
   categoryImage_Coupe?: string;
   categoryImage_Wagon?: string;
-  cardTitleField?: 'model' | 'brand';
+  cardTitleField?: 'model' | 'brand' | 'brand_model';
   cardBgColor?: string;
   cardBorderColor?: string;
   cardTitleColor?: string;

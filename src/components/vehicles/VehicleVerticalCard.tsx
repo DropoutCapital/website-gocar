@@ -53,7 +53,7 @@ const transEs: Record<TransEN, string> = {
 
 interface VehicleGridCardProps {
   vehicle: Vehicle;
-  cardTitleField?: 'model' | 'brand';
+  cardTitleField?: 'model' | 'brand' | 'brand_model';
   newBadgeText?: string;
   showBadgeCondition?: boolean;
   showBadgePromo?: boolean;
@@ -282,13 +282,19 @@ const VehicleGridCard = ({
             className={`text-[20px] sm:text-[22px] font-semibold tracking-tight ${cardTitleColor ? '' : 'text-neutral-900 dark:text-white'}`}
             style={cardTitleColor ? { color: cardTitleColor } : undefined}
           >
-            {cardTitleField === 'brand' ? (vehicle.brand?.name ?? 'Marca') : (vehicle.model?.name ?? 'Modelo')}
+            {cardTitleField === 'brand_model'
+              ? `${vehicle.brand?.name ?? 'Marca'} ${vehicle.model?.name ?? ''}`.trim()
+              : cardTitleField === 'brand'
+                ? (vehicle.brand?.name ?? 'Marca')
+                : (vehicle.model?.name ?? 'Modelo')}
           </h3>
           <p
             className={`mt-0.5 text-sm ${cardSubtitleColor ? '' : 'text-neutral-600 dark:text-neutral-400'}`}
             style={cardSubtitleColor ? { color: cardSubtitleColor } : undefined}
           >
-            {cardTitleField === 'brand' ? vehicle.model?.name : vehicle.brand?.name} {vehicle.year ?? ''}
+            {cardTitleField === 'brand_model'
+              ? (vehicle.year ?? '')
+              : `${cardTitleField === 'brand' ? vehicle.model?.name : vehicle.brand?.name} ${vehicle.year ?? ''}`}
           </p>
 
           <div
