@@ -169,6 +169,7 @@ export const VehicleCarousel = ({
             discount_percentage,
             created_at,
             label,
+            label_color,
             transmission,
             status:status_id(id, name, show_in_web, web_visibility_days),
             brand:brand_id(id, name),

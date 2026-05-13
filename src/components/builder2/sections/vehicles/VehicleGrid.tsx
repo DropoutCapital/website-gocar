@@ -251,6 +251,7 @@ export const VehicleGrid = ({
             status_id,
             discount_percentage,
             label,
+            label_color,
             transmission,
             created_at,
             status:status_id(id, name, show_in_web),

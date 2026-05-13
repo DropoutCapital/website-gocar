@@ -13,6 +13,7 @@ import {
   mapFuelTypeToSpanish,
   mapTransmissionTypeToSpanish,
 } from '@/utils/functions';
+import { readableTextOn } from '@/utils/colors';
 
 interface VehicleHorizontalCardProps {
   vehicle: Vehicle;
@@ -93,12 +94,25 @@ const VehicleHorizontalCard = ({
           )}
           {(vehicle.label || (isNew() && !isSold && !isReserved)) && (
             <div className='absolute top-2 right-2 z-20'>
-              <Chip
-                size='sm'
-                className='shadow-lg text-white bg-green-100 text-green-700 border-none font-semibold'
-              >
-                {vehicle.label || newBadgeText}
-              </Chip>
+              {vehicle.label && vehicle.label_color ? (
+                <Chip
+                  size='sm'
+                  className='shadow-lg border-none font-semibold'
+                  style={{
+                    backgroundColor: vehicle.label_color,
+                    color: readableTextOn(vehicle.label_color),
+                  }}
+                >
+                  {vehicle.label}
+                </Chip>
+              ) : (
+                <Chip
+                  size='sm'
+                  className='shadow-lg text-white bg-green-100 text-green-700 border-none font-semibold'
+                >
+                  {vehicle.label || newBadgeText}
+                </Chip>
+              )}
             </div>
           )}
           {!isSold &&
