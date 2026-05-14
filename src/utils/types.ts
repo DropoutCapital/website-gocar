@@ -63,6 +63,7 @@ export interface Client {
   default_language?: 'es' | 'en' | 'pt';
   client_website_config: ClientWebsiteConfig;
   currency: 'CLP' | 'USD';
+  card_title_field?: 'model' | 'brand' | 'brand_model' | null;
 }
 
 export interface Vehicle {

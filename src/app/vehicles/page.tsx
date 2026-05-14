@@ -66,7 +66,8 @@ const VehiclesPage: React.FC = () => {
   const isMd = useMediaQuery('(min-width: 768px)');
 
   const { vehicles, isLoading } = useVehiclesStore();
-  const { isLoading: isClientLoading } = useClientStore();
+  const { client, isLoading: isClientLoading } = useClientStore();
+  const cardTitleField = client?.card_title_field ?? 'model';
   const {
     initializeStore,
     colors,
@@ -542,7 +543,7 @@ const VehiclesPage: React.FC = () => {
                       <>
                         <div className="grid gap-4 sm:gap-6 pb-4 mt-2 sm:mt-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                           {paginatedVehicles.map((vehicle) => (
-                            <VehicleVerticalCard key={vehicle.id} vehicle={vehicle} />
+                            <VehicleVerticalCard key={vehicle.id} vehicle={vehicle} cardTitleField={cardTitleField} />
                           ))}
                         </div>
                         {currentPage < totalPages && (
