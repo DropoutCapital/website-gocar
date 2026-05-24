@@ -51,6 +51,7 @@ import { GalleryPremium } from '@/components/builder2/sections/premium/GalleryPr
 import { CTAPremium } from '@/components/builder2/sections/premium/CTAPremium';
 // Layout sections — rendered by builder, layout conditionally hides its own nav/footer
 import { BuilderNavbar } from '@/components/builder2/sections/layout/BuilderNavbar';
+import { NavbarSimple } from '@/components/builder2/sections/layout/NavbarSimple';
 import { Footer } from '@/components/builder2/sections/layout/Footer';
 import { StatsCounter } from '@/components/builder2/sections/marketing/StatsCounter';
 import { PromoBanner } from '@/components/builder2/sections/marketing/PromoBanner';
@@ -395,7 +396,7 @@ export const baseResolver: Record<string, any> = {
   VideoEmbed,
   HeroModerno, StatsModerno, TestimonialsModerno, CTAModerno, FooterModerno,
   HeroPremium, FeatureShowcase, TestimonialsPremium, GalleryPremium, CTAPremium,
-  BuilderNavbar, Footer, StatsCounter, PromoBanner, AwardsBadges, TrustBadges, LogoCloud, LogoMarquee, LogoGrid, PhotoGallery, TeamMembers,
+  BuilderNavbar, NavbarSimple, Footer, StatsCounter, PromoBanner, AwardsBadges, TrustBadges, LogoCloud, LogoMarquee, LogoGrid, PhotoGallery, TeamMembers,
   FinancingFormEmbed, ConsignmentsFormEmbed, BuyDirectFormEmbed, WeSearchFormEmbed, ContactFormEmbed, AboutContentEmbed,
   div: Unknown, p: Unknown, span: Unknown, img: Unknown, Unknown,
 };
