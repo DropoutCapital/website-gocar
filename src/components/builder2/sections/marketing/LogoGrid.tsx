@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNode } from '@craftjs/core';
+import { isBlankHtml } from './logoHelpers';
 
 interface LogoItem {
   src: string;
@@ -87,14 +88,17 @@ export const LogoGrid = ({
       className='w-full py-12 md:py-16 px-4 sm:px-6 lg:px-8'
     >
       <div className='max-w-7xl mx-auto'>
+        {(!isBlankHtml(title) || !isBlankHtml(subtitle)) && (
         <div className='text-center mb-12'>
+          {!isBlankHtml(title) && (
           <h2
             className='text-2xl md:text-3xl font-bold'
             style={{ color: textColor }}
           >
             {title}
           </h2>
-          {subtitle && (
+          )}
+          {!isBlankHtml(subtitle) && (
             <p
               className='mt-2 text-sm md:text-base'
               style={{ color: subtextColor }}
@@ -103,6 +107,7 @@ export const LogoGrid = ({
             </p>
           )}
         </div>
+        )}
 
         <div className='space-y-10'>
           {groups.map((group, gi) => (
