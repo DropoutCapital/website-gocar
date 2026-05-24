@@ -10,6 +10,7 @@ interface ImageProps {
   margin?: number;
   borderRadius?: number;
   objectFit?: 'cover' | 'contain' | 'fill' | 'none';
+  align?: 'left' | 'center' | 'right';
 }
 
 interface CraftComponent {
@@ -30,12 +31,16 @@ const ImageComponent = forwardRef<HTMLDivElement, ImageProps>(
       margin = 5,
       borderRadius = 4,
       objectFit = 'cover',
+      align = 'left',
     }: ImageProps,
     ref
   ) => {
     const { connectors, selected } = useNode((state) => ({
       selected: state.events.selected,
     }));
+
+    const marginLeft = align === 'left' ? '0' : 'auto';
+    const marginRight = align === 'right' ? '0' : 'auto';
 
     return (
       <div
@@ -53,7 +58,7 @@ const ImageComponent = forwardRef<HTMLDivElement, ImageProps>(
           padding: `${padding}px`,
           margin: `${margin}px 0`,
           borderRadius: `${borderRadius}px`,
-          border: selected ? '1px dashed #1e88e5' : '1px dashed transparent',
+          border: selected ? '1px dashed #1e88e5' : 'none',
         }}
       >
         <img
@@ -63,6 +68,8 @@ const ImageComponent = forwardRef<HTMLDivElement, ImageProps>(
             width,
             height,
             display: 'block',
+            marginLeft,
+            marginRight,
             borderRadius: `${borderRadius}px`,
             objectFit,
           }}
@@ -86,6 +93,7 @@ ImageComponent.displayName = 'Image';
     margin: 5,
     borderRadius: 4,
     objectFit: 'cover',
+    align: 'left',
   },
 };
 
