@@ -11,6 +11,7 @@ interface ContainerProps {
   borderRadius?: number;
   shadow?: boolean;
   contentAlign?: ContentAlign;
+  fullWidth?: boolean;
 }
 
 interface CraftComponent {
@@ -39,6 +40,7 @@ const ContainerComponent = forwardRef<HTMLDivElement, ContainerProps>(
       borderRadius = 4,
       shadow = false,
       contentAlign = 'stretch',
+      fullWidth = false,
     }: ContainerProps,
     ref
   ) => {
@@ -50,6 +52,9 @@ const ContainerComponent = forwardRef<HTMLDivElement, ContainerProps>(
       contentAlign && contentAlign !== 'stretch'
         ? { display: 'flex', flexDirection: 'column' as const, alignItems: ALIGN_MAP[contentAlign] }
         : {};
+
+    // "Ancho completo": contenido pega a los bordes laterales.
+    const horizontalPadding = fullWidth ? 0 : padding;
 
     return (
       <div
@@ -64,11 +69,14 @@ const ContainerComponent = forwardRef<HTMLDivElement, ContainerProps>(
           }
         }}
         style={{
-          padding: `${padding}px`,
+          paddingTop: `${padding}px`,
+          paddingBottom: `${padding}px`,
+          paddingLeft: `${horizontalPadding}px`,
+          paddingRight: `${horizontalPadding}px`,
           background,
           minHeight: '80px',
           margin: `${margin}px 0`,
-          borderRadius: `${borderRadius}px`,
+          borderRadius: fullWidth ? '0px' : `${borderRadius}px`,
           boxShadow: shadow ? '0 3px 6px rgba(0,0,0,0.1)' : 'none',
           position: 'relative',
           border: selected ? '1px dashed #1e88e5' : '1px solid transparent',
@@ -93,6 +101,7 @@ ContainerComponent.displayName = 'Container';
     borderRadius: 4,
     shadow: false,
     contentAlign: 'stretch',
+    fullWidth: false,
   },
   rules: { canDrop: () => true },
 };
