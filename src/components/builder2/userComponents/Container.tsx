@@ -5,6 +5,7 @@ interface ContainerProps {
   children?: ReactNode;
   background?: string;
   padding?: number;
+  margin?: number;
   borderRadius?: number;
   shadow?: boolean;
 }
@@ -25,6 +26,7 @@ const ContainerComponent = forwardRef<HTMLDivElement, ContainerProps>(
       children,
       background = '#f5f5f5',
       padding = 20,
+      margin = 0,
       borderRadius = 4,
       shadow = false,
     }: ContainerProps,
@@ -50,7 +52,7 @@ const ContainerComponent = forwardRef<HTMLDivElement, ContainerProps>(
           padding: `${padding}px`,
           background,
           minHeight: '80px',
-          margin: '0px 0',
+          margin: `${margin}px 0`,
           borderRadius: `${borderRadius}px`,
           boxShadow: shadow ? '0 3px 6px rgba(0,0,0,0.1)' : 'none',
           position: 'relative',
@@ -71,6 +73,7 @@ ContainerComponent.displayName = 'Container';
   props: {
     background: '#f5f5f5',
     padding: 20,
+    margin: 0,
     borderRadius: 4,
     shadow: false,
   },
