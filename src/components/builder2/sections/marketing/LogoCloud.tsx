@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNode } from '@craftjs/core';
+import { isBlankHtml } from './logoHelpers';
 
 interface LogoItem {
   src: string;
@@ -72,14 +73,17 @@ export const LogoCloud = ({
       className='w-full py-12 md:py-16 px-4 sm:px-6 lg:px-8'
     >
       <div className='max-w-7xl mx-auto'>
+        {(!isBlankHtml(title) || !isBlankHtml(subtitle)) && (
         <div className='text-center mb-10'>
+          {!isBlankHtml(title) && (
           <h2
             className='text-2xl md:text-3xl font-bold'
             style={{ color: textColor }}
           >
             {title}
           </h2>
-          {subtitle && (
+          )}
+          {!isBlankHtml(subtitle) && (
             <p
               className='mt-2 text-sm md:text-base'
               style={{ color: subtextColor }}
@@ -88,6 +92,7 @@ export const LogoCloud = ({
             </p>
           )}
         </div>
+        )}
 
         <div
           className={`grid ${gridColsClass[columns] || gridColsClass[6]} gap-8 items-center justify-items-center`}

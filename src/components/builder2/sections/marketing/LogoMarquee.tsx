@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNode } from '@craftjs/core';
+import { isBlankHtml } from './logoHelpers';
 
 interface LogoItem {
   src: string;
@@ -92,7 +93,7 @@ export const LogoMarquee = ({
         }
       `}</style>
 
-      {title && (
+      {!isBlankHtml(title) && (
         <div className='text-center mb-8 px-4'>
           <h2
             className='text-2xl md:text-3xl font-bold'
