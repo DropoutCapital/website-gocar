@@ -6,6 +6,10 @@ interface ImageProps {
   alt?: string;
   width?: string;
   height?: string;
+  padding?: number;
+  margin?: number;
+  borderRadius?: number;
+  objectFit?: 'cover' | 'contain' | 'fill' | 'none';
 }
 
 interface CraftComponent {
@@ -22,6 +26,10 @@ const ImageComponent = forwardRef<HTMLDivElement, ImageProps>(
       alt = 'Image',
       width = '100%',
       height = 'auto',
+      padding = 10,
+      margin = 5,
+      borderRadius = 4,
+      objectFit = 'cover',
     }: ImageProps,
     ref
   ) => {
@@ -42,9 +50,9 @@ const ImageComponent = forwardRef<HTMLDivElement, ImageProps>(
           }
         }}
         style={{
-          padding: '10px',
-          margin: '5px 0',
-          borderRadius: '4px',
+          padding: `${padding}px`,
+          margin: `${margin}px 0`,
+          borderRadius: `${borderRadius}px`,
           border: selected ? '1px dashed #1e88e5' : '1px dashed transparent',
         }}
       >
@@ -55,7 +63,8 @@ const ImageComponent = forwardRef<HTMLDivElement, ImageProps>(
             width,
             height,
             display: 'block',
-            borderRadius: '4px',
+            borderRadius: `${borderRadius}px`,
+            objectFit,
           }}
         />
       </div>
@@ -73,6 +82,10 @@ ImageComponent.displayName = 'Image';
     alt: 'Image',
     width: '100%',
     height: 'auto',
+    padding: 10,
+    margin: 5,
+    borderRadius: 4,
+    objectFit: 'cover',
   },
 };
 
