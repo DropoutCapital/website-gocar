@@ -8,5 +8,5 @@ export async function getClient() {
     return null;
   }
 
-  return JSON.parse(clientData);
+  return JSON.parse(decodeURIComponent(clientData));
 }
