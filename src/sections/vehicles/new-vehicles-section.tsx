@@ -420,13 +420,13 @@ const NewVehiclesSection = ({ minimal = false, cardTitleField = 'model', filterS
     // Localized categories and sort options
   // Mapeo de IDs de filtro a posibles nombres en la DB (con variantes de acentos/idioma)
   const categoryVariants: Record<string, string[]> = {
-    SUV: ['SUV', 'Suv', 'suv', 'Crossover', 'Todoterreno', '4x4'],
-    Sedan: ['Sedan', 'Sedán', 'sedan', 'sedán', 'Berlina'],
-    Hatchback: ['Hatchback', 'hatchback', 'Compacto'],
-    Pickup: ['Pickup', 'pickup', 'Pick-up', 'Camioneta'],
-    Van: ['Van', 'van', 'Minivan', 'Furgoneta'],
-    Coupe: ['Coupe', 'Coupé', 'coupe', 'coupé', 'Deportivo'],
-    Wagon: ['Wagon', 'wagon', 'Station Wagon', 'Familiar'],
+    SUV: ['SUV', 'Suv', 'suv', 'Crossover', 'crossover', 'Todoterreno', '4x4'],
+    Sedan: ['Sedan', 'Sedán', 'sedan', 'sedán', 'Berlina', 'Automóvil', 'automóvil', 'Clásico', 'clásico'],
+    Hatchback: ['Hatchback', 'hatchback', 'Compacto', 'City Car', 'city car'],
+    Pickup: ['Pickup', 'pickup', 'Pick-up', 'Camioneta', 'camioneta'],
+    Van: ['Van', 'van', 'Minivan', 'minivan', 'Furgoneta', 'Furgón', 'furgón'],
+    Coupe: ['Coupe', 'Coupé', 'coupe', 'coupé', 'Deportivo', 'deportivo', 'Convertible', 'convertible'],
+    Wagon: ['Wagon', 'wagon', 'Station Wagon', 'station wagon', 'Familiar'],
   };
 
   // Obtener categorías que tienen vehículos
