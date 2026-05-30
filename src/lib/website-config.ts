@@ -7,11 +7,16 @@ export async function getWebsiteConfig(
   if (!clientId) return null;
 
   try {
-    console.log('Fetching website configuration for client ID:', clientId);
-
+    // Only select what the root layout actually consumes (integrations).
+    // A plain select('*') drags down elements_structure — the LZ-compressed
+    // builder JSON — which can reach 45 MB for a single client. Because the
+    // layout is force-dynamic, that payload was being fetched server-side
+    // (cross-region) on EVERY navigation, blocking the HTML and occasionally
+    // tripping Vercel's MIDDLEWARE/render timeout (504). ClientProvider already
+    // excludes elements_structure from its client-side fetch for the same reason.
     const { data, error } = await supabase
       .from('client_website_config')
-      .select('*')
+      .select('id, client_id, integrations')
       .eq('client_id', clientId)
       .single();
 

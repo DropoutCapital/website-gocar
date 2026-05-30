@@ -47,11 +47,27 @@ export async function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
 
   try {
-    const { data: client } = (await supabase
-      .from('clients')
-      .select('id, name, logo, favicon, seo, domain')
-      .eq('domain', hostname)
-      .single()) as { data: Client | null };
+    // Guard the lookup with a hard timeout. Supabase lives in us-west-1 while
+    // this middleware runs from gru1 (São Paulo); a network hiccup on that
+    // cross-region hop used to leave the await hanging until Vercel killed the
+    // whole invocation at ~25s (MIDDLEWARE_INVOCATION_TIMEOUT → 504). If the
+    // lookup doesn't resolve fast, we abort and fall through to next() so the
+    // page still renders (with default SEO) instead of erroring.
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2500);
+
+    let client: Client | null = null;
+    try {
+      const { data } = (await supabase
+        .from('clients')
+        .select('id, name, logo, favicon, seo, domain')
+        .eq('domain', hostname)
+        .abortSignal(controller.signal)
+        .single()) as { data: Client | null };
+      client = data;
+    } finally {
+      clearTimeout(timeout);
+    }
 
     if (!client) {
       return NextResponse.redirect(new URL('/404', request.url));
