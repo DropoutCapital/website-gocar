@@ -42,6 +42,8 @@ interface TraditionalVehicleGridProps {
   gridColsMd?: string;
   gridColsLg?: string;
   gridColsXl?: string;
+  offerTabLabel?: string;
+  offerTabFilter?: string;
   noResultsTitle?: string;
   noResultsText?: string;
   noResultsButtonText?: string;
@@ -90,6 +92,8 @@ export const TraditionalVehicleGrid = ({
   gridColsMd = '3',
   gridColsLg = '3',
   gridColsXl = '4',
+  offerTabLabel,
+  offerTabFilter,
 }: TraditionalVehicleGridProps) => {
   const {
     connectors: { connect },
@@ -133,6 +137,8 @@ export const TraditionalVehicleGrid = ({
         gridColsMd={gridColsMd}
         gridColsLg={gridColsLg}
         gridColsXl={gridColsXl}
+        offerTabLabel={offerTabLabel}
+        offerTabFilter={offerTabFilter}
         cardBgColor={cardBgColor}
         cardBorderColor={cardBorderColor}
         cardTitleColor={cardTitleColor}
@@ -182,6 +188,8 @@ export const TraditionalVehicleGrid = ({
     gridColsMd: '3',
     gridColsLg: '3',
     gridColsXl: '4',
+    offerTabLabel: '',
+    offerTabFilter: '',
     noResultsTitle: 'Sin resultados',
     noResultsText: 'No encontramos vehículos con esos filtros',
     noResultsButtonText: 'Ver todos los vehículos',
