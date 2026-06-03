@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useMemo, useState, useDeferredValue, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useDeferredValue, useCallback, Suspense } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Icon } from '@iconify/react';
 import useMediaQuery from '@/hooks/useMediaQuery';
 import useVehiclesStore from '@/store/useVehiclesStore';
@@ -61,9 +62,19 @@ function ClientOnly({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-const VehiclesPage: React.FC = () => {
+const VehiclesPageInner: React.FC = () => {
   const { tx } = useTx();
   const isMd = useMediaQuery('(min-width: 768px)');
+
+  // Promo activa vía URL (?promo=cyber). Filtra por etiqueta del vehículo.
+  // Sin campo nuevo en BD: usa la misma etiqueta roja que el cliente ya pone.
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const promoParam = (searchParams.get('promo') || '').trim() || null;
+  // Texto del banner (opcional). Si no viene, usa la palabra del filtro.
+  // Ej: ?promo=padre&titulo=Día del Padre  → filtra por "padre", banner "DÍA DEL PADRE".
+  const promoTitle = (searchParams.get('titulo') || '').trim() || promoParam || '';
 
   const { vehicles, isLoading } = useVehiclesStore();
   const { client, isLoading: isClientLoading } = useClientStore();
@@ -126,7 +137,7 @@ const VehiclesPage: React.FC = () => {
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filters, priceRange, searchQuery, sortOrder]);
+  }, [filters, priceRange, searchQuery, sortOrder, promoParam]);
 
   // Contador de filtros activos
   const activeFiltersCount = useMemo(() => {
@@ -177,6 +188,12 @@ const VehiclesPage: React.FC = () => {
   // filtrar + buscar (usa data, no i18n)
   const filteredVehicles = useMemo(() => {
     return vehicles.filter((vehicle) => {
+      // Filtro de promo: solo autos cuya etiqueta contenga el texto (ej. "cyber").
+      if (promoParam) {
+        const lbl = (vehicle.label || '').toLowerCase();
+        if (!lbl.includes(promoParam.toLowerCase())) return false;
+      }
+
       if (terms.length) {
         const brand = vehicle.brand?.name?.toLowerCase() || '';
         const model = vehicle.model?.name?.toLowerCase() || '';
@@ -205,7 +222,7 @@ const VehiclesPage: React.FC = () => {
 
       return true;
     });
-  }, [vehicles, filters, priceRange, terms]);
+  }, [vehicles, filters, priceRange, terms, promoParam]);
 
   const isPageLoading = isClientLoading || isLoading || isGeneralStoreLoading;
 
@@ -250,6 +267,16 @@ const VehiclesPage: React.FC = () => {
     if (next.length) nf[key] = next; else delete nf[key];
     setFilters(nf);
   };
+
+  // Limpia los filtros del store Y saca ?promo=/?titulo= de la URL, para que
+  // "Limpiar filtros" siempre devuelva a la lista completa (no quede atascado
+  // en una campaña sin resultados). Se usa en todos los botones de limpiar.
+  const clearAllFilters = useCallback(() => {
+    clearFilters(maxPrice);
+    if (typeof window !== 'undefined' && window.location.search) {
+      router.replace(pathname);
+    }
+  }, [clearFilters, maxPrice, router, pathname]);
 
   // Estilo CTA (backend → CSS var). No rompe SSR.
   const CTA_STYLE: React.CSSProperties = {
@@ -346,6 +373,7 @@ const VehiclesPage: React.FC = () => {
                       availableYears={availableYears}
                       maxPrice={maxPrice}
                       ctaColor="var(--brand-color)"
+                      onClearFilters={clearAllFilters}
                     />
                   </div>
                 </div>
@@ -369,6 +397,7 @@ const VehiclesPage: React.FC = () => {
                 availableYears={availableYears}
                 maxPrice={maxPrice}
                 ctaColor="var(--brand-color)"
+                onClearFilters={clearAllFilters}
               />
             </ModalSlideFilter>
           )}
@@ -380,6 +409,45 @@ const VehiclesPage: React.FC = () => {
                 <LoadingState />
               ) : (
                 <>
+                  {/* Banner de campaña (solo con ?promo=...) */}
+                  {promoParam && (
+                    <div
+                      className="relative mb-6 overflow-hidden rounded-3xl border border-fuchsia-500/30"
+                      style={{ background: 'linear-gradient(110deg,#070713 0%,#1a0b2e 45%,#2d0b4e 100%)' }}
+                    >
+                      {/* glow decorativo */}
+                      <div
+                        className="pointer-events-none absolute -top-16 -right-10 h-56 w-56 rounded-full opacity-40 blur-3xl"
+                        style={{ background: 'radial-gradient(circle,#d946ef,transparent 70%)' }}
+                      />
+                      <div
+                        className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full opacity-40 blur-3xl"
+                        style={{ background: 'radial-gradient(circle,#22d3ee,transparent 70%)' }}
+                      />
+                      <div className="relative px-6 py-7 sm:px-10 sm:py-9 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.25em] text-fuchsia-300">
+                            <Icon icon="mdi:flash" className="text-base" />
+                            Tiempo limitado
+                          </span>
+                          <h2 className="mt-1.5 text-3xl sm:text-5xl font-black tracking-tight text-white">
+                            OFERTAS{' '}
+                            <span
+                              className="text-transparent bg-clip-text"
+                              style={{ backgroundImage: 'linear-gradient(90deg,#22d3ee,#d946ef)' }}
+                            >
+                              {promoTitle.toUpperCase()}
+                            </span>
+                          </h2>
+                          <p className="mt-1.5 text-sm text-white/70">
+                            {filteredVehicles.length} {filteredVehicles.length === 1 ? 'auto en promoción' : 'autos en promoción'}
+                          </p>
+                        </div>
+                        <Icon icon="mdi:tag-multiple" className="hidden sm:block text-7xl text-white/10 shrink-0" />
+                      </div>
+                    </div>
+                  )}
+
                   <div className="mb-4 sm:mb-6">
                     <div className="flex-1 flex flex-col max-w-full">
                       <div className="flex items-center justify-between gap-3">
@@ -490,7 +558,7 @@ const VehiclesPage: React.FC = () => {
                           size="sm"
                           variant="light"
                           className="h-7"
-                          onPress={() => clearFilters(maxPrice)}
+                          onPress={clearAllFilters}
                           startContent={<Icon icon="mdi:filter-remove-outline" className="text-base" />}
                         >
                           {clearFiltersText}
@@ -529,7 +597,7 @@ const VehiclesPage: React.FC = () => {
                       <Button
                         className="mt-4"
                         variant="light"
-                        onPress={() => clearFilters(maxPrice)}
+                        onPress={clearAllFilters}
                         startContent={<Icon icon="mdi:filter-remove-outline" />}
                       >
                         {clearFiltersText}
@@ -570,5 +638,11 @@ const VehiclesPage: React.FC = () => {
     </ClientOnly>
   );
 };
+
+const VehiclesPage: React.FC = () => (
+  <Suspense fallback={null}>
+    <VehiclesPageInner />
+  </Suspense>
+);
 
 export default VehiclesPage;

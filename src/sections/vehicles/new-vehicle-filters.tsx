@@ -56,6 +56,8 @@ interface Props {
   isCollapsed?: boolean;
   /** Callback para colapsar/expandir */
   onToggleCollapse?: () => void;
+  /** Override de "Limpiar filtros" (ej. para también limpiar ?promo= de la URL) */
+  onClearFilters?: () => void;
 }
 
 const NewVehicleFilters = ({
@@ -71,6 +73,7 @@ const NewVehicleFilters = ({
   ctaColor,
   isCollapsed,
   onToggleCollapse,
+  onClearFilters,
 }: Props) => {
   const { tx } = useTx();
   const {
@@ -234,7 +237,7 @@ const NewVehicleFilters = ({
               size="sm"
               variant="light"
               color="danger"
-              onPress={() => clearFilters(maxPrice)}
+              onPress={() => (onClearFilters ? onClearFilters() : clearFilters(maxPrice))}
               className="text-[13px] h-7 px-2"
               startContent={<Icon icon="mdi:filter-remove-outline" className="text-base" />}
             >
