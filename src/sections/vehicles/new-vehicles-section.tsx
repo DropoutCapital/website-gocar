@@ -220,6 +220,9 @@ const generateAutocomplete = (vehicles: Vehicle[], query: string): string[] => {
   return [...suggestions].slice(0, 5);
 };
 
+// ID interno de la pestaña de ofertas (campaña). No es una categoría real.
+const OFFER_TAB_ID = '__offers__';
+
 const CATEGORY_ICONS: Record<string, string> = {
   all: 'mdi:car-multiple',
   SUV: 'mdi:car-suv',
@@ -267,6 +270,11 @@ interface NewVehiclesSectionProps {
   gridColsMd?: string;
   gridColsLg?: string;
   gridColsXl?: string;
+  /** Campaña de ofertas: nombre visible de la pestaña (ej. "Ofertas Cyber") */
+  offerTabLabel?: string;
+  /** Campaña de ofertas: palabra a buscar dentro de la etiqueta del auto (ej. "cyber").
+   *  La pestaña solo aparece si hay autos cuya etiqueta la contenga. */
+  offerTabFilter?: string;
   /** Card color overrides from builder */
   cardBgColor?: string;
   cardBorderColor?: string;
@@ -276,7 +284,7 @@ interface NewVehiclesSectionProps {
   cardPriceColor?: string;
 }
 
-const NewVehiclesSection = ({ minimal = false, cardTitleField = 'model', filterStyle = 'buttons', filterBarBgColor, filterBarBorderColor, filterTextColor, filterActiveTextColor, accentColor, sectionBgColor, categoryImage_all, categoryImage_SUV, categoryImage_Sedan, categoryImage_Hatchback, categoryImage_Pickup, categoryImage_Van, categoryImage_Coupe, categoryImage_Wagon, showBadgeCondition = true, showBadgePromo = true, showBadgeNew = true, showBadgeCustom = true, showRibbonSold = true, showRibbonReserved = true, showBadgeDiscount = true, gridColsSm = '2', gridColsMd = '3', gridColsLg = '3', gridColsXl = '4', cardBgColor, cardBorderColor, cardTitleColor, cardSubtitleColor, cardSpecsColor, cardPriceColor }: NewVehiclesSectionProps) => {
+const NewVehiclesSection = ({ minimal = false, cardTitleField = 'model', filterStyle = 'buttons', filterBarBgColor, filterBarBorderColor, filterTextColor, filterActiveTextColor, accentColor, sectionBgColor, categoryImage_all, categoryImage_SUV, categoryImage_Sedan, categoryImage_Hatchback, categoryImage_Pickup, categoryImage_Van, categoryImage_Coupe, categoryImage_Wagon, showBadgeCondition = true, showBadgePromo = true, showBadgeNew = true, showBadgeCustom = true, showRibbonSold = true, showRibbonReserved = true, showBadgeDiscount = true, gridColsSm = '2', gridColsMd = '3', gridColsLg = '3', gridColsXl = '4', offerTabLabel, offerTabFilter, cardBgColor, cardBorderColor, cardTitleColor, cardSubtitleColor, cardSpecsColor, cardPriceColor }: NewVehiclesSectionProps) => {
   const { theme } = useThemeStore();
   const { vehicles, isLoading } = useVehiclesStore();
   const { client } = useClientStore();
@@ -459,7 +467,27 @@ const NewVehiclesSection = ({ minimal = false, cardTitleField = 'model', filterS
   ];
 
   // Filtrar solo categorías que tienen vehículos (siempre mostrar "all")
-  const vehicleCategories = allCategories.filter(cat => categoryHasVehicles(cat.id));
+  const baseCategories = allCategories.filter(cat => categoryHasVehicles(cat.id));
+
+  // ── Pestaña de OFERTAS (campaña) ──
+  // Solo aparece si hay autos cuya etiqueta contiene la palabra configurada.
+  // Cuando la campaña termina (se borran las etiquetas), la pestaña desaparece sola.
+  const offerKeyword = (offerTabFilter || '').trim().toLowerCase();
+  const hasOfferVehicles = useMemo(() => {
+    if (!offerKeyword) return false;
+    return vehicles.some(v => (v.label || '').toLowerCase().includes(offerKeyword));
+  }, [vehicles, offerKeyword]);
+
+  const vehicleCategories = useMemo(() => {
+    if (!hasOfferVehicles) return baseCategories;
+    const offerTab = {
+      id: OFFER_TAB_ID,
+      name: (offerTabLabel || '').trim() || 'Ofertas',
+      icon: 'mdi:fire',
+      description: '',
+    };
+    return [offerTab, ...baseCategories];
+  }, [hasOfferVehicles, baseCategories, offerTabLabel]);
 
   // Resolver nombre de categoría DB → ID de filtro
   const resolveCategoryId = (dbName: string): string | null => {
@@ -540,8 +568,13 @@ const NewVehiclesSection = ({ minimal = false, cardTitleField = 'model', filterS
     result = result.filter((vehicle) => {
       let matches = true;
 
-      // Category from tabs (usar variantes para matchear nombres con acentos/sinónimos)
-      if (selectedCategory !== 'all') {
+      // Tab de OFERTAS: filtra por etiqueta del auto en vez de categoría.
+      if (selectedCategory === OFFER_TAB_ID) {
+        if (offerKeyword && !(vehicle.label || '').toLowerCase().includes(offerKeyword)) {
+          matches = false;
+        }
+      } else if (selectedCategory !== 'all') {
+        // Category from tabs (usar variantes para matchear nombres con acentos/sinónimos)
         const variants = categoryVariants[selectedCategory] || [selectedCategory];
         const vehicleCatName = vehicle?.category?.name || '';
         if (!variants.some(v => v.toLowerCase() === vehicleCatName.toLowerCase())) {
@@ -627,7 +660,7 @@ const NewVehiclesSection = ({ minimal = false, cardTitleField = 'model', filterS
     }
 
     return result;
-  }, [vehicles, searchQuery, selectedCategory, filters, priceRange, sortOrder, aiFilters]);
+  }, [vehicles, searchQuery, selectedCategory, filters, priceRange, sortOrder, aiFilters, offerKeyword]);
 
   // Generar sugerencias cuando no hay resultados
   const noResultsSuggestions = useMemo(() => {
@@ -772,6 +805,7 @@ const NewVehiclesSection = ({ minimal = false, cardTitleField = 'model', filterS
                 <div className={`flex ${filterStyle === 'images' ? 'gap-2.5' : 'gap-2'} pt-2 pb-2 min-w-max`}>
                   {vehicleCategories.map((category) => {
                     const isActive = selectedCategory === category.id;
+                    const isOfferTab = category.id === OFFER_TAB_ID;
                     const hasBuilderColors = filterTextColor || filterActiveTextColor || accentColor;
 
                     {/* Image style filter */}
@@ -814,12 +848,14 @@ const NewVehiclesSection = ({ minimal = false, cardTitleField = 'model', filterS
                           </div>
                           <span
                             className={`text-[11px] sm:text-xs font-medium transition-colors duration-200 ${
-                              isActive ? 'font-semibold' : ''
+                              isActive || isOfferTab ? 'font-semibold' : ''
                             }`}
                             style={{
-                              color: isActive
-                                ? (accentColor || undefined)
-                                : (filterTextColor || undefined),
+                              color: isOfferTab
+                                ? '#dc2626'
+                                : isActive
+                                  ? (accentColor || undefined)
+                                  : (filterTextColor || undefined),
                             }}
                           >
                             {category.name}
@@ -832,16 +868,18 @@ const NewVehiclesSection = ({ minimal = false, cardTitleField = 'model', filterS
                     return (
                       <Button
                         key={category.id}
-                        variant={isActive ? 'solid' : 'light'}
-                        color={!hasBuilderColors ? (isActive ? 'primary' : 'default') : undefined}
+                        variant={isOfferTab || isActive ? 'solid' : 'light'}
+                        color={isOfferTab || hasBuilderColors ? undefined : (isActive ? 'primary' : 'default')}
                         onClick={() => setSelectedCategory(category.id)}
                         className={`whitespace-nowrap hover:-translate-y-0.5 transition-all px-4 py-2 rounded-full ${
                           isActive ? 'shadow-md' : ''
-                        } ${isActive && theme === 'dark' && !hasBuilderColors ? 'text-black' : ''}`}
-                        style={hasBuilderColors ? {
-                          color: isActive ? (filterActiveTextColor || '#ffffff') : (filterTextColor || undefined),
-                          backgroundColor: isActive ? (accentColor || undefined) : undefined,
-                        } : undefined}
+                        } ${isActive && theme === 'dark' && !hasBuilderColors && !isOfferTab ? 'text-black' : ''}`}
+                        style={isOfferTab
+                          ? { color: '#ffffff', backgroundColor: isActive ? '#b91c1c' : '#dc2626', fontWeight: 600 }
+                          : (hasBuilderColors ? {
+                              color: isActive ? (filterActiveTextColor || '#ffffff') : (filterTextColor || undefined),
+                              backgroundColor: isActive ? (accentColor || undefined) : undefined,
+                            } : undefined)}
                         startContent={
                           <Icon icon={category.icon} className='text-xl' />
                         }
