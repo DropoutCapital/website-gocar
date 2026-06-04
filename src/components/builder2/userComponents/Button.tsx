@@ -122,7 +122,6 @@ export const Button = ({
   },
   rules: {
     canDrag: () => true,
-    canDrop: () => false,
     canMoveIn: () => false,
   },
 };

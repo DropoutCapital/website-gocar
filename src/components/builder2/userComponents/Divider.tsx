@@ -51,7 +51,6 @@ export const Divider = ({
   },
   rules: {
     canDrag: () => true,
-    canDrop: () => false,
     canMoveIn: () => false,
   },
 };
