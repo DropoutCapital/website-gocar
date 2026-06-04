@@ -56,7 +56,6 @@ export const Spacer = ({ height = 40 }: SpacerProps) => {
   },
   rules: {
     canDrag: () => true,
-    canDrop: () => false,
     canMoveIn: () => false,
   },
 };

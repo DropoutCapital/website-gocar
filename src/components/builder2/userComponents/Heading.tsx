@@ -65,7 +65,6 @@ export const Heading = ({
   },
   rules: {
     canDrag: () => true,
-    canDrop: () => false,
     canMoveIn: () => false,
   },
 };

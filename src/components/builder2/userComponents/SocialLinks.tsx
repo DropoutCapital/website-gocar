@@ -114,7 +114,6 @@ export const SocialLinks = ({
   },
   rules: {
     canDrag: () => true,
-    canDrop: () => false,
     canMoveIn: () => false,
   },
 };

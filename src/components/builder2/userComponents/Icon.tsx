@@ -80,7 +80,6 @@ export const Icon = ({
   },
   rules: {
     canDrag: () => true,
-    canDrop: () => false,
     canMoveIn: () => false,
   },
 };
