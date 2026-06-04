@@ -7,6 +7,7 @@ import { Editor, Frame, useNode } from '@craftjs/core';
 // Componentes del builder
 // =====================
 import { Container } from '@/components/builder2/userComponents/Container';
+import { Grid } from '@/components/builder2/userComponents/Grid';
 import { Text } from '@/components/builder2/userComponents/Text';
 import { Image } from '@/components/builder2/userComponents/Image';
 import { Button } from '@/components/builder2/userComponents/Button';
@@ -391,7 +392,7 @@ const Unknown: React.FC<React.PropsWithChildren<{}>> = ({ children }) => (
 // Resolver con Proxy
 // =====================
 export const baseResolver: Record<string, any> = {
-  Container, Text, Image, Button, Heading, Divider, Spacer, Icon, SocialLinks,
+  Container, Grid, Text, Image, Button, Heading, Divider, Spacer, Icon, SocialLinks,
   HeroBasic, HeroWithImage, HeroWithBackground, HeroWithCard, HeroCarSearch,
   HeroFeatureCards, HeroTestimonial, HeroSearchBanner, HeroImageDivided,
   HeroWithLogo, HeroWelcome, HeroMinimalistic, HeroWithVideoEmbed,
