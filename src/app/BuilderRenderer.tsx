@@ -9,6 +9,12 @@ import { Editor, Frame, useNode } from '@craftjs/core';
 import { Container } from '@/components/builder2/userComponents/Container';
 import { Text } from '@/components/builder2/userComponents/Text';
 import { Image } from '@/components/builder2/userComponents/Image';
+import { Button } from '@/components/builder2/userComponents/Button';
+import { Heading } from '@/components/builder2/userComponents/Heading';
+import { Divider } from '@/components/builder2/userComponents/Divider';
+import { Spacer } from '@/components/builder2/userComponents/Spacer';
+import { Icon } from '@/components/builder2/userComponents/Icon';
+import { SocialLinks } from '@/components/builder2/userComponents/SocialLinks';
 import {
   HeroBasic,
   HeroWithImage,
@@ -385,7 +391,7 @@ const Unknown: React.FC<React.PropsWithChildren<{}>> = ({ children }) => (
 // Resolver con Proxy
 // =====================
 export const baseResolver: Record<string, any> = {
-  Container, Text, Image,
+  Container, Text, Image, Button, Heading, Divider, Spacer, Icon, SocialLinks,
   HeroBasic, HeroWithImage, HeroWithBackground, HeroWithCard, HeroCarSearch,
   HeroFeatureCards, HeroTestimonial, HeroSearchBanner, HeroImageDivided,
   HeroWithLogo, HeroWelcome, HeroMinimalistic, HeroWithVideoEmbed,
