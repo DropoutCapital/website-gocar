@@ -6,10 +6,12 @@ interface ButtonProps {
   link?: string;
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
+  fontSize?: number;
   bgColor?: string;
   textColor?: string;
   borderRadius?: number;
-  fullWidth?: boolean;
+  fullWidth?: boolean | string;
+  align?: 'left' | 'center' | 'right';
 }
 
 export const Button = ({
@@ -17,10 +19,12 @@ export const Button = ({
   link = '#',
   variant = 'primary',
   size = 'md',
+  fontSize = 16,
   bgColor = '#3b82f6',
   textColor = '#ffffff',
   borderRadius = 8,
   fullWidth = false,
+  align = 'left',
 }: ButtonProps) => {
   const { connectors, selected } = useNode((state) => ({
     selected: state.events.selected,
@@ -30,19 +34,24 @@ export const Button = ({
     isEnabled: state.options.enabled,
   }));
 
-  const sizeClasses = {
-    sm: 'px-4 py-2 text-sm',
-    md: 'px-6 py-3 text-base',
-    lg: 'px-8 py-4 text-lg',
+  // Acepta booleano nuevo o el string 'true'/'false' que guardaban versiones viejas.
+  const isFullWidth = fullWidth === true || fullWidth === 'true';
+
+  // "size" controla SOLO el relleno (padding). El tamaño del texto es aparte (fontSize).
+  const paddingClasses = {
+    sm: 'px-4 py-2',
+    md: 'px-6 py-3',
+    lg: 'px-8 py-4',
   };
 
   const getStyles = (): React.CSSProperties => {
     const base: React.CSSProperties = {
       borderRadius: `${borderRadius}px`,
+      fontSize: `${fontSize}px`,
       transition: 'all 0.2s ease',
       cursor: isEnabled ? 'move' : 'pointer',
-      display: fullWidth ? 'block' : 'inline-block',
-      width: fullWidth ? '100%' : 'auto',
+      display: isFullWidth ? 'block' : 'inline-block',
+      width: isFullWidth ? '100%' : 'auto',
       textAlign: 'center',
       fontWeight: 600,
       textDecoration: 'none',
@@ -50,27 +59,13 @@ export const Button = ({
     };
 
     switch (variant) {
-      case 'primary':
-        return { ...base, backgroundColor: bgColor, color: textColor };
       case 'secondary':
-        return {
-          ...base,
-          backgroundColor: `${bgColor}15`,
-          color: bgColor,
-        };
+        return { ...base, backgroundColor: `${bgColor}15`, color: bgColor };
       case 'outline':
-        return {
-          ...base,
-          backgroundColor: 'transparent',
-          color: bgColor,
-          borderColor: bgColor,
-        };
+        return { ...base, backgroundColor: 'transparent', color: bgColor, borderColor: bgColor };
       case 'ghost':
-        return {
-          ...base,
-          backgroundColor: 'transparent',
-          color: bgColor,
-        };
+        return { ...base, backgroundColor: 'transparent', color: bgColor };
+      case 'primary':
       default:
         return { ...base, backgroundColor: bgColor, color: textColor };
     }
@@ -94,13 +89,14 @@ export const Button = ({
     <div
       ref={(el: HTMLDivElement | null) => { if (el) connectors.connect(el); }}
       style={{
-        display: fullWidth ? 'block' : 'inline-block',
+        width: '100%',
+        textAlign: align,
         border: selected ? '1px dashed #1e88e5' : '1px solid transparent',
         padding: '2px',
       }}
     >
       <button
-        className={`${sizeClasses[size]} hover:opacity-90 hover:shadow-md`}
+        className={`${paddingClasses[size]} hover:opacity-90 hover:shadow-md`}
         style={getStyles()}
         onClick={handleClick}
       >
@@ -117,10 +113,12 @@ export const Button = ({
     link: '#',
     variant: 'primary',
     size: 'md',
+    fontSize: 16,
     bgColor: '#3b82f6',
     textColor: '#ffffff',
     borderRadius: 8,
     fullWidth: false,
+    align: 'left',
   },
   rules: {
     canDrag: () => true,
