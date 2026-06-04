@@ -8,6 +8,8 @@ interface GridProps {
   columns?: number;
   gap?: number;
   rowMinHeight?: number;
+  maxWidth?: number;
+  maxHeight?: number;
   background?: string;
   padding?: number;
   margin?: number;
@@ -22,6 +24,8 @@ export const Grid = ({
   columns = 3,
   gap = 16,
   rowMinHeight = 100,
+  maxWidth = 0,
+  maxHeight = 0,
   background = 'transparent',
   padding = 16,
   margin = 0,
@@ -35,6 +39,10 @@ export const Grid = ({
 
   const cols = Math.max(1, Math.min(12, Number(columns) || 1));
 
+  // 0 = sin límite. Espejo de goautos-admin.
+  const maxW = Number(maxWidth) || 0;
+  const maxH = Number(maxHeight) || 0;
+
   return (
     <div
       ref={(el: HTMLDivElement | null) => { if (el) connectors.connect(el); }}
@@ -45,7 +53,9 @@ export const Grid = ({
         gap: `${gap}px`,
         background,
         padding: `${padding}px`,
-        margin: `${margin}px 0`,
+        margin: maxW > 0 ? `${margin}px auto` : `${margin}px 0`,
+        ...(maxW > 0 ? { maxWidth: `${maxW}px`, width: '100%' } : {}),
+        ...(maxH > 0 ? { maxHeight: `${maxH}px`, overflowY: 'auto' as const } : {}),
         borderRadius: `${borderRadius}px`,
         justifyItems,
         alignItems,
@@ -65,6 +75,8 @@ Grid.craft = {
     columns: 3,
     gap: 16,
     rowMinHeight: 100,
+    maxWidth: 0,
+    maxHeight: 0,
     background: 'transparent',
     padding: 16,
     margin: 0,
