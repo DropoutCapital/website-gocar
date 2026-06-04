@@ -55,7 +55,8 @@ export const HeroWelcome = ({
 
   const activeExamples = currentLanguage === 'en' ? searchExamplesEn : searchExamplesEs;
 
-  const finalHighlightedText = highlightedText || client?.name || 'Automotora';
+  // '' = borrado a propósito → respetarlo. undefined = nunca se tocó → usar nombre del cliente.
+  const finalHighlightedText = highlightedText ?? client?.name ?? 'Automotora';
   const primaryColor = client?.theme?.light?.primary || '#e05d31';
   const finalHighlightColor = highlightColor || primaryColor;
 
@@ -183,7 +184,8 @@ export const HeroWelcome = ({
   displayName: 'HeroWelcome',
   props: {
     title: 'Encuentra tu próximo vehículo en',
-    highlightedText: '',
+    // highlightedText sin default (undefined) → al arrastrarlo muestra el nombre del cliente,
+    // pero una vez que el usuario lo borra ('') se respeta y queda vacío.
     subtitle: 'Describe el vehículo de tus sueños y deja que nuestra IA encuentre las mejores opciones para ti.',
     searchPlaceholder: 'Toyota Corolla blanco',
     bgColor: '#ffffff',
