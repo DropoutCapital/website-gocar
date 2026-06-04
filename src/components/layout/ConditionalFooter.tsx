@@ -1,39 +1,39 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import useClientStore from '@/store/useClientStore';
+import { useBuilderReady } from '@/hooks/useBuilderReady';
 import { Footer } from './Footer';
 
 /**
- * Shows the static Footer ONLY when the builder is not active.
- * When builder is enabled, the Footer component inside the builder data handles the footer.
- * Exception: /embed pages always use static footer.
- * /vehicles pages use static footer only when builder is NOT enabled.
+ * Shows the static Footer ONLY when the builder is not active (or as a degraded
+ * fallback if the builder structure fails to load).
+ * When builder is enabled, the Footer inside the builder data handles the footer —
+ * except on /vehicles and /embed, where the builder doesn't render.
+ *
+ * While the builder structure is still loading we render NOTHING instead of the
+ * static footer, to avoid the flash of hardcoded defaults. See useBuilderReady.
  */
 export default function ConditionalFooter() {
-  const { client, isLoading } = useClientStore();
   const pathname = usePathname();
+  const status = useBuilderReady();
 
-  // Embed pages always use static footer
+  // Embed pages always use the static footer
   if (pathname?.startsWith('/embed')) {
     return <Footer />;
   }
 
-  // While loading, show nothing — prevents flash of static footer
-  if (isLoading) return null;
+  // Builder client still hydrating elements_structure → wait, don't flash static
+  if (status === 'loading') return null;
 
-  // If builder is enabled, the BuilderRenderer handles the footer
-  const config = client?.client_website_config;
-  const cfg = Array.isArray(config) ? config[0] : config;
-  const builderEnabled = cfg?.is_enabled && cfg?.elements_structure;
+  // Non-builder client, or structure failed to load (timeout) → static footer
+  if (status === 'fallback') return <Footer />;
 
-  if (builderEnabled) {
-    // On /vehicles, we still need a footer since builder doesn't render on this route
-    if (pathname?.startsWith('/vehicles')) {
-      return <Footer />;
-    }
-    return null;
+  // status === 'ready': builder structure loaded.
+  // /vehicles is not a builder page, so it still needs the static footer.
+  if (pathname?.startsWith('/vehicles')) {
+    return <Footer />;
   }
 
-  return <Footer />;
+  // Other pages: the builder renders its own footer inside the page.
+  return null;
 }
