@@ -9,22 +9,32 @@ interface VideoEmbedProps {
   textColor?: string;
   aspectRatio?: '16:9' | '4:3' | '1:1' | '21:9';
   maxWidth?: string;
+  borderRadius?: string;
+  autoplay?: boolean;
 }
 
-const getEmbedUrl = (url: string): string | null => {
+const getEmbedUrl = (url: string, autoplay = false): string | null => {
   if (!url) return null;
-  let videoId;
+  let videoId: string | undefined;
+  let base: string | null = null;
+  let isVimeo = false;
   if (url.includes('youtube.com/watch')) {
     videoId = url.split('v=')[1]?.split('&')[0];
-    return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    base = videoId ? `https://www.youtube.com/embed/${videoId}` : null;
   } else if (url.includes('youtu.be/')) {
     videoId = url.split('youtu.be/')[1]?.split('?')[0];
-    return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    base = videoId ? `https://www.youtube.com/embed/${videoId}` : null;
   } else if (url.includes('vimeo.com/')) {
     videoId = url.split('vimeo.com/')[1]?.split('?')[0];
-    return videoId ? `https://player.vimeo.com/video/${videoId}` : null;
+    base = videoId ? `https://player.vimeo.com/video/${videoId}` : null;
+    isVimeo = true;
   }
-  return null; // Retorna null si no es una URL de video válida o no soportada
+  if (!base) return null; // URL no soportada o inválida
+  if (autoplay) {
+    // Los navegadores exigen mute para permitir el autoplay
+    base += isVimeo ? '?autoplay=1&muted=1' : '?autoplay=1&mute=1&playsinline=1';
+  }
+  return base;
 };
 
 export const VideoEmbed = ({
@@ -35,6 +45,8 @@ export const VideoEmbed = ({
   textColor = '#1a202c', // gray-800
   aspectRatio = '16:9',
   maxWidth = '800px',
+  borderRadius = '8px',
+  autoplay = false,
 }: VideoEmbedProps) => {
   const {
     connectors: { connect, drag },
@@ -43,7 +55,7 @@ export const VideoEmbed = ({
     selected: state.events.selected,
   }));
 
-  const embedUrl = getEmbedUrl(videoUrl || '');
+  const embedUrl = getEmbedUrl(videoUrl || '', autoplay);
 
   const aspectRatioStyles: React.CSSProperties = {};
   if (aspectRatio === '16:9')
@@ -80,8 +92,8 @@ export const VideoEmbed = ({
 
         {embedUrl ? (
           <div
-            className='relative w-full overflow-hidden shadow-xl rounded-lg'
-            style={aspectRatioStyles}
+            className='relative w-full overflow-hidden shadow-xl'
+            style={{ ...aspectRatioStyles, borderRadius }}
           >
             <iframe
               src={embedUrl}
@@ -115,6 +127,8 @@ VideoEmbed.craft = {
     textColor: '#1a202c',
     aspectRatio: '16:9',
     maxWidth: '800px',
+    borderRadius: '8px',
+    autoplay: false,
   },
 
   rules: {
