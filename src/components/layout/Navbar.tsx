@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion, useReducedMotion, MotionConfig } from 'framer-motion';
+import lz from 'lzutf8';
 
 import useClientStore from '@/store/useClientStore';
 import useThemeStore from '@/store/useThemeStore';
@@ -41,16 +42,123 @@ export function extractBuilderLogo(client: any): string | null {
   }
 }
 
+// Iconos para el menú móvil. Los links del builder no traen icono, así que lo
+// derivamos de la URL (mismos iconos que el navbar por defecto) con fallback.
+const NAV_ICON_BY_URL: Record<string, string> = {
+  '/': 'solar:home-line-duotone',
+  '/financing': 'solar:card-2-line-duotone',
+  '/consignments': 'solar:bag-5-line-duotone',
+  '/buy-direct': 'solar:cart-5-line-duotone',
+  '/we-search-for-you': 'solar:compass-line-duotone',
+  '/vehicles': 'solar:wheel-line-duotone',
+  '/about': 'solar:users-group-rounded-line-duotone',
+  '/contact': 'solar:chat-round-dots-line-duotone',
+};
+const iconForUrl = (url: string): string =>
+  NAV_ICON_BY_URL[url] || 'solar:link-line-duotone';
+
+interface ExtractedNav {
+  links: { name: string; href: string; icon: string }[];
+  cta: { name: string; href: string } | null;
+}
+
+/**
+ * Extrae el navbar que el cliente configuró en el builder (links + CTA) leyendo
+ * la página `home` guardada en elements_structure. Se usa SOLO cuando el builder
+ * está activo (en /vehicles y /embed, donde el navbar real del builder no se
+ * renderiza). Devuelve null si el builder está apagado, la estructura aún no se
+ * hidrató, o no se encuentra un nodo navbar → el caller cae al navbar por defecto
+ * (mismo comportamiento de hoy, sin regresión para clientes tradicionales).
+ *
+ * Descompresión auto-contenida con lzutf8 a propósito: importar getPageBuilderData
+ * arrastraría BuilderRenderer (los ~60 componentes del builder) al bundle de /vehicles.
+ */
+function extractBuilderNav(
+  client: any,
+  theme: 'light' | 'dark',
+  translations: Record<string, string> | null
+): ExtractedNav | null {
+  try {
+    const config = client?.client_website_config;
+    const cfg = Array.isArray(config) ? config[0] : config;
+    if (!cfg?.is_enabled || !cfg?.elements_structure) return null;
+
+    // Resolver el blob comprimido de la home desde el envelope (v3/v2/legacy).
+    const structure = cfg.elements_structure;
+    let compressed: string | null = null;
+    if (typeof structure === 'object' && structure !== null) {
+      const env: any = structure;
+      if (env.v === 3) compressed = env.pages?.home?.[theme] || env.pages?.home?.light || env.pages?.home?.dark;
+      else if (env.v === 2) compressed = env[theme] || env.light || env.dark;
+    } else {
+      const raw = String(structure);
+      let env: any = null;
+      try { env = JSON.parse(raw); } catch { env = null; }
+      if (env?.v === 3) compressed = env.pages?.home?.[theme] || env.pages?.home?.light || env.pages?.home?.dark;
+      else if (env?.v === 2) compressed = env[theme] || env.light || env.dark;
+      else compressed = raw; // legacy single-theme (la home es el blob directo)
+    }
+    if (!compressed) return null;
+
+    let parsed: any = lz.decompress(lz.decodeBase64(compressed));
+    while (typeof parsed === 'string') {
+      try { parsed = JSON.parse(parsed); } catch { break; }
+    }
+    if (!parsed || typeof parsed !== 'object') return null;
+
+    const nodes = parsed.nodes && typeof parsed.nodes === 'object' ? parsed.nodes : parsed;
+
+    // Buscar el nodo navbar (BuilderNavbar o NavbarSimple).
+    let navNodeId: string | null = null;
+    let navNode: any = null;
+    for (const [id, node] of Object.entries(nodes) as [string, any][]) {
+      const rn = node?.type?.resolvedName;
+      if (rn === 'BuilderNavbar' || rn === 'NavbarSimple') {
+        navNodeId = id;
+        navNode = node;
+        break;
+      }
+    }
+    if (!navNode) return null;
+
+    const props = navNode.props || {};
+    const rawLinks: any[] = Array.isArray(props.links) ? props.links : [];
+    const links = rawLinks
+      .filter((l) => l && typeof l.url === 'string' && l.url && typeof l.text === 'string')
+      .map((l, i) => {
+        let text = l.text as string;
+        const key = `home::${navNodeId}::link_${i}`;
+        if (translations && key in translations && translations[key]) text = translations[key];
+        return { name: text, href: l.url as string, icon: iconForUrl(l.url) };
+      });
+
+    // El CTA solo existe en BuilderNavbar (NavbarSimple no tiene).
+    let cta: { name: string; href: string } | null = null;
+    if (navNode.type?.resolvedName === 'BuilderNavbar' && props.ctaUrl && props.ctaText) {
+      let ctaText = props.ctaText as string;
+      const ctaKey = `home::${navNodeId}::ctaText`;
+      if (translations && ctaKey in translations && translations[ctaKey]) ctaText = translations[ctaKey];
+      cta = { name: ctaText, href: props.ctaUrl as string };
+    }
+
+    return { links, cta };
+  } catch {
+    return null;
+  }
+}
+
 const Navbar = () => {
   const { client } = useClientStore();
   const { theme, setTheme } = useThemeStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
-  const { t } = useTranslation();
+  const { t, currentLanguage } = useTranslation();
   const prefersReduced = useReducedMotion();
 
-  const navigation = useMemo(
+  // Navbar por defecto (hardcodeado). Se usa cuando el builder está apagado,
+  // aún no cargó la estructura, o no hay nodo navbar configurado.
+  const defaultNavigation = useMemo(
     () => [
       { name: t('navigation.links.home'), href: '/', icon: 'solar:home-line-duotone' },
       { name: t('navigation.links.financing'), href: '/financing', icon: 'solar:card-2-line-duotone' },
@@ -60,6 +168,31 @@ const Navbar = () => {
     ],
     [t]
   );
+
+  // Contenido builder siempre en español; las traducciones son es→en.
+  const needsTranslation = !!(client as any)?.has_language_selector && currentLanguage === 'en';
+  const translations = useMemo(() => {
+    if (!needsTranslation) return null;
+    const config = (client as any)?.client_website_config;
+    const cfg = Array.isArray(config) ? config[0] : config;
+    if (!cfg?.translations) return null;
+    try {
+      return typeof cfg.translations === 'object' ? cfg.translations : JSON.parse(cfg.translations);
+    } catch {
+      return null;
+    }
+  }, [needsTranslation, client]);
+
+  // Si el builder está activo, usar los links/CTA que el cliente dejó en SU navbar
+  // (en /vehicles y /embed el navbar real del builder no se renderiza). Si no se
+  // puede determinar, builderNav es null y caemos al navbar por defecto.
+  const builderNav = useMemo(
+    () => extractBuilderNav(client, theme === 'dark' ? 'dark' : 'light', translations),
+    [client, theme, translations]
+  );
+
+  const navigation = builderNav ? builderNav.links : defaultNavigation;
+  const cta = builderNav ? builderNav.cta : { name: t('navigation.links.contact'), href: '/contact' };
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 50);
@@ -161,18 +294,20 @@ const Navbar = () => {
               <ThemeToggle />
             </NavbarItem>
           )}
-          <NavbarItem className="hidden sm:flex">
-            <Button
-              as={Link}
-              href="/contact"
-              size="sm"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors rounded-md px-4"
-              variant="solid"
-              prefetch={false}
-            >
-              {t('navigation.links.contact')}
-            </Button>
-          </NavbarItem>
+          {cta && (
+            <NavbarItem className="hidden sm:flex">
+              <Button
+                as={Link}
+                href={cta.href}
+                size="sm"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors rounded-md px-4"
+                variant="solid"
+                prefetch={false}
+              >
+                {cta.name}
+              </Button>
+            </NavbarItem>
+          )}
           <NavbarMenuToggle
             aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
             className="sm:hidden text-gray-700 dark:text-white"
@@ -253,19 +388,21 @@ const Navbar = () => {
                 </ul>
 
                 {/* Footer acciones */}
-                <div className="p-3 border-t border-black/5 dark:border-white/10">
-                  <Button
-                    as={Link}
-                    href="/contact"
-                    prefetch={false}
-                    onClick={() => setIsMenuOpen(false)}
-                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors rounded-xl h-11"
-                    variant="solid"
-                    startContent={<Icon icon="solar:chat-round-dots-line-duotone" className="text-xl" />}
-                  >
-                    {t('navigation.links.contact')}
-                  </Button>
-                </div>
+                {cta && (
+                  <div className="p-3 border-t border-black/5 dark:border-white/10">
+                    <Button
+                      as={Link}
+                      href={cta.href}
+                      prefetch={false}
+                      onClick={() => setIsMenuOpen(false)}
+                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors rounded-xl h-11"
+                      variant="solid"
+                      startContent={<Icon icon="solar:chat-round-dots-line-duotone" className="text-xl" />}
+                    >
+                      {cta.name}
+                    </Button>
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
