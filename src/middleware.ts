@@ -8,6 +8,7 @@ interface Client {
   logo: string;
   favicon: string;
   domain: string;
+  custom_domain?: string | null;
   seo?: {
     title?: string;
     description?: string;
@@ -47,11 +48,13 @@ export async function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
 
   try {
+    // Resuelve el tenant por el subdominio *.goauto.cl (domain) o por el
+    // dominio propio que el cliente haya conectado (custom_domain).
     const { data: client } = (await supabase
       .from('clients')
-      .select('id, name, logo, favicon, seo, domain')
-      .eq('domain', hostname)
-      .single()) as { data: Client | null };
+      .select('id, name, logo, favicon, seo, domain, custom_domain')
+      .or(`domain.eq.${hostname},custom_domain.eq.${hostname}`)
+      .maybeSingle()) as { data: Client | null };
 
     if (!client) {
       return NextResponse.redirect(new URL('/404', request.url));
