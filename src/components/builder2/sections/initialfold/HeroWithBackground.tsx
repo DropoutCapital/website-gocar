@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNode, useEditor } from '@craftjs/core';
 import { Button } from '@/components/ui/button';
-import { normalizeBuilderLink } from '@/utils/functions';
+import { normalizeBuilderLink, isBlankHtml } from '@/utils/functions';
 
 interface HeroWithBackgroundProps {
   title?: string;
@@ -144,38 +144,48 @@ export const HeroWithBackground = ({
           className={`w-full text-${textAlignment}`}
           style={{ margin: textAlignment === 'center' ? '0 auto' : '0' }}
         >
-          <h1
-            style={{ color: textColor }}
-            className='text-4xl md:text-5xl font-bold mb-4'
-            dangerouslySetInnerHTML={{ __html: title || '' }}
-          />
-          <p style={{ color: textColor }} className='text-lg md:text-xl mb-8'
-            dangerouslySetInnerHTML={{ __html: subtitle || '' }}
-          />
-          <div className='flex flex-wrap gap-4 justify-center'>
-            <Button
-              className='px-8 py-3 rounded-md transition-colors'
-              style={{
-                backgroundColor: buttonBgColor,
-                color: buttonTextColor,
-              }}
-              onClick={scrollToVehicles}
-            >
-              <span dangerouslySetInnerHTML={{ __html: buttonText || '' }} />
-            </Button>
-            <Button
-              asChild
-              variant='outline'
-              className='px-8 py-3 rounded-md border-2 transition-colors'
-              style={{
-                backgroundColor: buttonSecondaryBgColor,
-                color: buttonSecondaryTextColor,
-                borderColor: buttonSecondaryTextColor,
-              }}
-            >
-              <a href={normalizeBuilderLink(buttonLinkSecondary)} dangerouslySetInnerHTML={{ __html: buttonTextSecondary || '' }} />
-            </Button>
-          </div>
+          {!isBlankHtml(title) && (
+            <h1
+              style={{ color: textColor }}
+              className='text-4xl md:text-5xl font-bold mb-4'
+              dangerouslySetInnerHTML={{ __html: title || '' }}
+            />
+          )}
+          {!isBlankHtml(subtitle) && (
+            <p style={{ color: textColor }} className='text-lg md:text-xl mb-8'
+              dangerouslySetInnerHTML={{ __html: subtitle || '' }}
+            />
+          )}
+          {(!isBlankHtml(buttonText) || !isBlankHtml(buttonTextSecondary)) && (
+            <div className='flex flex-wrap gap-4 justify-center'>
+              {!isBlankHtml(buttonText) && (
+                <Button
+                  className='px-8 py-3 rounded-md transition-colors'
+                  style={{
+                    backgroundColor: buttonBgColor,
+                    color: buttonTextColor,
+                  }}
+                  onClick={scrollToVehicles}
+                >
+                  <span dangerouslySetInnerHTML={{ __html: buttonText || '' }} />
+                </Button>
+              )}
+              {!isBlankHtml(buttonTextSecondary) && (
+                <Button
+                  asChild
+                  variant='outline'
+                  className='px-8 py-3 rounded-md border-2 transition-colors'
+                  style={{
+                    backgroundColor: buttonSecondaryBgColor,
+                    color: buttonSecondaryTextColor,
+                    borderColor: buttonSecondaryTextColor,
+                  }}
+                >
+                  <a href={normalizeBuilderLink(buttonLinkSecondary)} dangerouslySetInnerHTML={{ __html: buttonTextSecondary || '' }} />
+                </Button>
+              )}
+            </div>
+          )}
 
           {children}
         </div>

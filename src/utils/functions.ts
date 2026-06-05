@@ -1,3 +1,18 @@
+/**
+ * True si el HTML no tiene contenido visible: '', solo tags vacíos (<br>, <p></p>),
+ * &nbsp; o espacios. Se usa para colapsar sub-elementos (título/subtítulo/botón)
+ * cuando el usuario los borra en el builder, en vez de dejar el hueco con su margen.
+ */
+export const isBlankHtml = (html?: string | null): boolean => {
+  if (html == null) return true;
+  const text = String(html)
+    .replace(/<br\s*\/?>/gi, '')
+    .replace(/&nbsp;/gi, '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/\s+/g, '');
+  return text.length === 0;
+};
+
 export const mapFuelTypeToSpanish = (
   fuelType: 'Gasoline' | 'Diesel' | 'Hybrid' | 'Electric' | 'Gas'
 ): string => {

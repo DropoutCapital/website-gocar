@@ -7,6 +7,7 @@ import { Search, X } from 'lucide-react';
 import useClientStore from '@/store/useClientStore';
 import useVehicleFiltersStore from '@/store/useVehicleFiltersStore';
 import { useTranslation } from '@/i18n/hooks/useTranslation';
+import { isBlankHtml } from '@/utils/functions';
 
 const searchExamplesEs = [
   'Toyota Corolla blanco',
@@ -118,20 +119,29 @@ export const HeroWelcome = ({
       <div className='relative isolate overflow-hidden'>
         <div className='mx-auto max-w-7xl px-6 py-24 sm:pt-32 lg:px-8'>
           <div className='text-center'>
-            <h1
-              className='text-5xl font-bold tracking-tight sm:text-6xl max-w-3xl mx-auto'
-              style={{ color: textColor, lineHeight: '1.1' }}
-            >
-              <span dangerouslySetInnerHTML={{ __html: effectiveTitle || '' }} />{' '}
-              <span style={{ color: finalHighlightColor }}
-                dangerouslySetInnerHTML={{ __html: finalHighlightedText || '' }} />
-            </h1>
+            {(!isBlankHtml(effectiveTitle) || !isBlankHtml(finalHighlightedText)) && (
+              <h1
+                className='text-5xl font-bold tracking-tight sm:text-6xl max-w-3xl mx-auto'
+                style={{ color: textColor, lineHeight: '1.1' }}
+              >
+                {!isBlankHtml(effectiveTitle) && (
+                  <span dangerouslySetInnerHTML={{ __html: effectiveTitle || '' }} />
+                )}
+                {!isBlankHtml(effectiveTitle) && !isBlankHtml(finalHighlightedText) ? ' ' : ''}
+                {!isBlankHtml(finalHighlightedText) && (
+                  <span style={{ color: finalHighlightColor }}
+                    dangerouslySetInnerHTML={{ __html: finalHighlightedText || '' }} />
+                )}
+              </h1>
+            )}
 
-            <p
-              className='mt-6 text-xl leading-8 max-w-2xl mx-auto'
-              style={{ color: textColor, opacity: 0.7 }}
-              dangerouslySetInnerHTML={{ __html: effectiveSubtitle || '' }}
-            />
+            {!isBlankHtml(effectiveSubtitle) && (
+              <p
+                className='mt-6 text-xl leading-8 max-w-2xl mx-auto'
+                style={{ color: textColor, opacity: 0.7 }}
+                dangerouslySetInnerHTML={{ __html: effectiveSubtitle || '' }}
+              />
+            )}
 
             {/* Functional search bar */}
             <div className='mt-10 max-w-3xl mx-auto'>
