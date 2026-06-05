@@ -3,6 +3,7 @@ import { useNode, useEditor } from '@craftjs/core';
 import { Button } from '@/components/ui/button';
 import { ImageIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { isBlankHtml } from '@/utils/functions';
 // DeleteButton component not available
 
 interface HeroWithLogoProps {
@@ -160,60 +161,64 @@ export const HeroWithLogo = ({
       <div className="w-full z-10 relative flex flex-col items-center justify-center h-full">
         <div className="text-center">
           {/* Logo */}
-          <div className="mb-8">
-            {logoUrl ? (
-              <img
-                src={logoUrl}
-                alt={logoText}
-                className="
-                  mx-auto
-                  w-auto
-                  object-contain
-                  max-w-[80%]        /* evita que llene todo el ancho en móviles */
-                  sm:max-w-[60%]     /* un poco más acotado en tablets */
-                  md:max-w-none      /* sin límite de ancho desde md en adelante */
-                "
-                style={{
-                  /* Altura responsiva: mínimo 56px en mobile, escala por viewport y tope en desktop */
-                  maxHeight: 'clamp(56px, 18vw, 128px)',
-                  transform: `scale(${logoScale})`,
-                  transition: 'transform 0.3s ease-in-out',
-                }}
-              />
-            ) : (
-              <h1
-                className="text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-2"
-                style={{
-                  transform: `scale(${logoScale})`,
-                  transition: 'transform 0.3s ease-in-out',
-                }}
-                dangerouslySetInnerHTML={{ __html: logoText || '' }}
-              />
-            )}
-          </div>
+          {(logoUrl || !isBlankHtml(logoText)) && (
+            <div className="mb-8">
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={logoText}
+                  className="
+                    mx-auto
+                    w-auto
+                    object-contain
+                    max-w-[80%]        /* evita que llene todo el ancho en móviles */
+                    sm:max-w-[60%]     /* un poco más acotado en tablets */
+                    md:max-w-none      /* sin límite de ancho desde md en adelante */
+                  "
+                  style={{
+                    /* Altura responsiva: mínimo 56px en mobile, escala por viewport y tope en desktop */
+                    maxHeight: 'clamp(56px, 18vw, 128px)',
+                    transform: `scale(${logoScale})`,
+                    transition: 'transform 0.3s ease-in-out',
+                  }}
+                />
+              ) : (
+                <h1
+                  className="text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-2"
+                  style={{
+                    transform: `scale(${logoScale})`,
+                    transition: 'transform 0.3s ease-in-out',
+                  }}
+                  dangerouslySetInnerHTML={{ __html: logoText || '' }}
+                />
+              )}
+            </div>
+          )}
 
           {/* Botón */}
-          <div className="flex justify-center">
-            <Button
-              className={`px-8 py-3 transition-colors text-lg font-medium ${
-                buttonIsCircular === 'true' ? 'rounded-full' : ''
-              }`}
-              style={{
-                backgroundColor: buttonBgColor,
-                color: buttonTextColor,
-                borderColor: buttonBorderColor,
-                borderWidth: `${buttonBorderWidth}px`,
-                borderStyle: buttonBorderWidth > 0 ? 'solid' : 'none',
-                borderRadius:
-                  buttonIsCircular === 'true'
-                    ? '50%'
-                    : `${buttonBorderRadius}px`,
-              }}
-              onClick={navigateToVehicles}
-            >
-              <span dangerouslySetInnerHTML={{ __html: buttonText || '' }} />
-            </Button>
-          </div>
+          {!isBlankHtml(buttonText) && (
+            <div className="flex justify-center">
+              <Button
+                className={`px-8 py-3 transition-colors text-lg font-medium ${
+                  buttonIsCircular === 'true' ? 'rounded-full' : ''
+                }`}
+                style={{
+                  backgroundColor: buttonBgColor,
+                  color: buttonTextColor,
+                  borderColor: buttonBorderColor,
+                  borderWidth: `${buttonBorderWidth}px`,
+                  borderStyle: buttonBorderWidth > 0 ? 'solid' : 'none',
+                  borderRadius:
+                    buttonIsCircular === 'true'
+                      ? '50%'
+                      : `${buttonBorderRadius}px`,
+                }}
+                onClick={navigateToVehicles}
+              >
+                <span dangerouslySetInnerHTML={{ __html: buttonText || '' }} />
+              </Button>
+            </div>
+          )}
 
           {children}
         </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNode, useEditor } from '@craftjs/core';
 import { Button } from '@/components/ui/button';
-import { normalizeBuilderLink } from '@/utils/functions';
+import { normalizeBuilderLink, isBlankHtml } from '@/utils/functions';
 
 interface HeroBasicProps {
   title?: string;
@@ -140,46 +140,56 @@ export const HeroBasic = ({
         </div>
 
         {/* Title */}
-        <h1
-          style={{ color: textColor }}
-          className='text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.08] tracking-tight mb-6'
-          dangerouslySetInnerHTML={{ __html: title || '' }}
-        />
+        {!isBlankHtml(title) && (
+          <h1
+            style={{ color: textColor }}
+            className='text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.08] tracking-tight mb-6'
+            dangerouslySetInnerHTML={{ __html: title || '' }}
+          />
+        )}
 
         {/* Subtitle */}
-        <p
-          style={{ color: textColor, opacity: 0.7 }}
-          className='text-lg md:text-xl leading-relaxed max-w-2xl mb-10'
-          dangerouslySetInnerHTML={{ __html: subtitle || '' }}
-        />
+        {!isBlankHtml(subtitle) && (
+          <p
+            style={{ color: textColor, opacity: 0.7 }}
+            className='text-lg md:text-xl leading-relaxed max-w-2xl mb-10'
+            dangerouslySetInnerHTML={{ __html: subtitle || '' }}
+          />
+        )}
 
         {/* Buttons */}
-        <div className={`flex flex-wrap gap-4 ${justifyClass}`}>
-          <Button
-            className='px-8 py-4 text-base rounded-full transition-all duration-200 hover:scale-[1.03] active:scale-[0.98] shadow-lg hover:shadow-xl'
-            style={{
-              backgroundColor: buttonBgColor,
-              color: buttonTextColor,
-              boxShadow: `0 4px 14px 0 ${buttonBgColor}40`,
-            }}
-            onClick={scrollToVehicles}
-          >
-            <span dangerouslySetInnerHTML={{ __html: buttonText || '' }} />
-          </Button>
-          <Button
-            asChild
-            variant='outline'
-            className='px-8 py-4 text-base rounded-full border-2 transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]'
-            style={{
-              backgroundColor: buttonSecondaryBgColor,
-              color: finalButtonSecondaryTextColor,
-              borderColor: `${finalButtonSecondaryTextColor}40`,
-            }}
-          >
-            <a href={isEnabled ? '#' : normalizeBuilderLink(buttonLinkSecondary)}
-              dangerouslySetInnerHTML={{ __html: buttonTextSecondary || '' }} />
-          </Button>
-        </div>
+        {(!isBlankHtml(buttonText) || !isBlankHtml(buttonTextSecondary)) && (
+          <div className={`flex flex-wrap gap-4 ${justifyClass}`}>
+            {!isBlankHtml(buttonText) && (
+              <Button
+                className='px-8 py-4 text-base rounded-full transition-all duration-200 hover:scale-[1.03] active:scale-[0.98] shadow-lg hover:shadow-xl'
+                style={{
+                  backgroundColor: buttonBgColor,
+                  color: buttonTextColor,
+                  boxShadow: `0 4px 14px 0 ${buttonBgColor}40`,
+                }}
+                onClick={scrollToVehicles}
+              >
+                <span dangerouslySetInnerHTML={{ __html: buttonText || '' }} />
+              </Button>
+            )}
+            {!isBlankHtml(buttonTextSecondary) && (
+              <Button
+                asChild
+                variant='outline'
+                className='px-8 py-4 text-base rounded-full border-2 transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]'
+                style={{
+                  backgroundColor: buttonSecondaryBgColor,
+                  color: finalButtonSecondaryTextColor,
+                  borderColor: `${finalButtonSecondaryTextColor}40`,
+                }}
+              >
+                <a href={isEnabled ? '#' : normalizeBuilderLink(buttonLinkSecondary)}
+                  dangerouslySetInnerHTML={{ __html: buttonTextSecondary || '' }} />
+              </Button>
+            )}
+          </div>
+        )}
 
         {children}
       </div>

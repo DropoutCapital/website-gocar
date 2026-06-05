@@ -3,7 +3,7 @@
 import React from 'react';
 import { useNode } from '@craftjs/core';
 import { motion } from 'framer-motion';
-import { normalizeBuilderLink } from '@/utils/functions';
+import { normalizeBuilderLink, isBlankHtml } from '@/utils/functions';
 import { ArrowRight } from 'lucide-react';
 
 interface HeroPremiumProps {
@@ -64,28 +64,32 @@ export const HeroPremium = ({
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-24 text-center">
         <div className="space-y-8">
           {/* Eyebrow line */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0 }}
-            className="flex items-center justify-center gap-4"
-          >
-            <div className="h-px w-12" style={{ backgroundColor: hexToRgba(textColor, 0.2) }} />
-            <span className="text-xs font-medium uppercase tracking-[0.3em]" style={{ color: hexToRgba(textColor, 0.4) }} dangerouslySetInnerHTML={{ __html: eyebrowText }} />
-            <div className="h-px w-12" style={{ backgroundColor: hexToRgba(textColor, 0.2) }} />
-          </motion.div>
+          {!isBlankHtml(eyebrowText) && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0 }}
+              className="flex items-center justify-center gap-4"
+            >
+              <div className="h-px w-12" style={{ backgroundColor: hexToRgba(textColor, 0.2) }} />
+              <span className="text-xs font-medium uppercase tracking-[0.3em]" style={{ color: hexToRgba(textColor, 0.4) }} dangerouslySetInnerHTML={{ __html: eyebrowText }} />
+              <div className="h-px w-12" style={{ backgroundColor: hexToRgba(textColor, 0.2) }} />
+            </motion.div>
+          )}
 
           {/* Title */}
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.15 }}
-            className="text-[3rem] sm:text-[4rem] lg:text-[5rem] font-bold leading-[0.95]"
-            style={{ color: textColor, letterSpacing: '-0.04em' }}
-            dangerouslySetInnerHTML={{ __html: title }}
-          />
+          {!isBlankHtml(title) && (
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.15 }}
+              className="text-[3rem] sm:text-[4rem] lg:text-[5rem] font-bold leading-[0.95]"
+              style={{ color: textColor, letterSpacing: '-0.04em' }}
+              dangerouslySetInnerHTML={{ __html: title }}
+            />
+          )}
 
           {/* Highlight text with glow */}
           <motion.h1
@@ -103,39 +107,43 @@ export const HeroPremium = ({
           />
 
           {/* Subtitle */}
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.45 }}
-            className="text-lg sm:text-xl max-w-xl mx-auto"
-            style={{ color: hexToRgba(textColor, 0.5), lineHeight: '1.7' }}
-            dangerouslySetInnerHTML={{ __html: subtitle }}
-          />
+          {!isBlankHtml(subtitle) && (
+            <motion.p
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.45 }}
+              className="text-lg sm:text-xl max-w-xl mx-auto"
+              style={{ color: hexToRgba(textColor, 0.5), lineHeight: '1.7' }}
+              dangerouslySetInnerHTML={{ __html: subtitle }}
+            />
+          )}
 
           {/* CTA - glassmorphic button */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="pt-4"
-          >
-            <a
-              href={normalizeBuilderLink(buttonLink)}
-              className="group inline-flex items-center gap-3 h-14 px-8 rounded-full text-[15px] font-medium transition-all duration-300 hover:scale-[1.03]"
-              style={{
-                backgroundColor: hexToRgba(accent, 0.1),
-                border: `1px solid ${hexToRgba(accent, 0.3)}`,
-                color: accent,
-                backdropFilter: 'blur(12px)',
-                boxShadow: `0 0 30px ${hexToRgba(accent, 0.1)}`,
-              }}
+          {!isBlankHtml(buttonText) && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              className="pt-4"
             >
-              <span dangerouslySetInnerHTML={{ __html: buttonText }} />
-              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </a>
-          </motion.div>
+              <a
+                href={normalizeBuilderLink(buttonLink)}
+                className="group inline-flex items-center gap-3 h-14 px-8 rounded-full text-[15px] font-medium transition-all duration-300 hover:scale-[1.03]"
+                style={{
+                  backgroundColor: hexToRgba(accent, 0.1),
+                  border: `1px solid ${hexToRgba(accent, 0.3)}`,
+                  color: accent,
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: `0 0 30px ${hexToRgba(accent, 0.1)}`,
+                }}
+              >
+                <span dangerouslySetInnerHTML={{ __html: buttonText }} />
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </a>
+            </motion.div>
+          )}
         </div>
       </div>
     </div>

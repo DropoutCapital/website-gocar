@@ -4,6 +4,7 @@ import React from 'react';
 import { useNode, useEditor } from '@craftjs/core';
 import { Button } from '@/components/ui/button';
 import { Element } from '@craftjs/core';
+import { isBlankHtml } from '@/utils/functions';
 
 interface HeroMinimalisticProps {
   title?: string;
@@ -126,66 +127,76 @@ export const HeroMinimalistic = ({
               }}
             />
 
-            <h1
-              className='text-5xl md:text-6xl font-black mb-6'
-              style={{
-                color: textColor,
-                letterSpacing: '-0.025em',
-                lineHeight: '1.1',
-              }}
-              dangerouslySetInnerHTML={{ __html: title || '' }}
-            />
-
-            <p
-              className='text-lg md:text-xl mb-10 max-w-lg'
-              style={{
-                color: textColor,
-                opacity: 0.8,
-                lineHeight: '1.7',
-                marginLeft: titleAlignment === 'center' ? 'auto' : titleAlignment === 'right' ? 'auto' : '0',
-                marginRight: titleAlignment === 'center' ? 'auto' : titleAlignment === 'left' ? 'auto' : '0',
-              }}
-              dangerouslySetInnerHTML={{ __html: subtitle || '' }}
-            />
-
-            <div
-              className='flex flex-wrap gap-4'
-              style={{
-                justifyContent: titleAlignment === 'center' ? 'center' : titleAlignment === 'right' ? 'flex-end' : 'flex-start',
-              }}
-            >
-              <Button
-                className='rounded-full font-semibold text-base transition-all duration-300 hover:scale-105 hover:shadow-lg'
+            {!isBlankHtml(title) && (
+              <h1
+                className='text-5xl md:text-6xl font-black mb-6'
                 style={{
-                  backgroundColor: buttonBgColor,
-                  color: buttonTextColor,
-                  paddingLeft: buttonPaddingX,
-                  paddingRight: buttonPaddingX,
-                  paddingTop: buttonPaddingY,
-                  paddingBottom: buttonPaddingY,
-                  boxShadow: `0 4px 14px 0 ${buttonBgColor}66`,
+                  color: textColor,
+                  letterSpacing: '-0.025em',
+                  lineHeight: '1.1',
                 }}
-                onClick={() => scrollToSection(buttonLink1)}
-              >
-                <span dangerouslySetInnerHTML={{ __html: buttonText1 || '' }} />
-              </Button>
-              <Button
-                className='rounded-full font-semibold text-base border-2 bg-transparent transition-all duration-300 hover:scale-105'
-                variant='outline'
+                dangerouslySetInnerHTML={{ __html: title || '' }}
+              />
+            )}
+
+            {!isBlankHtml(subtitle) && (
+              <p
+                className='text-lg md:text-xl mb-10 max-w-lg'
                 style={{
-                  borderColor: buttonBgColor,
-                  color: buttonBgColor,
-                  paddingLeft: buttonPaddingX,
-                  paddingRight: buttonPaddingX,
-                  paddingTop: buttonPaddingY,
-                  paddingBottom: buttonPaddingY,
-                  backgroundColor: 'transparent',
+                  color: textColor,
+                  opacity: 0.8,
+                  lineHeight: '1.7',
+                  marginLeft: titleAlignment === 'center' ? 'auto' : titleAlignment === 'right' ? 'auto' : '0',
+                  marginRight: titleAlignment === 'center' ? 'auto' : titleAlignment === 'left' ? 'auto' : '0',
                 }}
-                onClick={() => scrollToSection(buttonLink2)}
+                dangerouslySetInnerHTML={{ __html: subtitle || '' }}
+              />
+            )}
+
+            {(!isBlankHtml(buttonText1) || !isBlankHtml(buttonText2)) && (
+              <div
+                className='flex flex-wrap gap-4'
+                style={{
+                  justifyContent: titleAlignment === 'center' ? 'center' : titleAlignment === 'right' ? 'flex-end' : 'flex-start',
+                }}
               >
-                <span dangerouslySetInnerHTML={{ __html: buttonText2 || '' }} />
-              </Button>
-            </div>
+                {!isBlankHtml(buttonText1) && (
+                  <Button
+                    className='rounded-full font-semibold text-base transition-all duration-300 hover:scale-105 hover:shadow-lg'
+                    style={{
+                      backgroundColor: buttonBgColor,
+                      color: buttonTextColor,
+                      paddingLeft: buttonPaddingX,
+                      paddingRight: buttonPaddingX,
+                      paddingTop: buttonPaddingY,
+                      paddingBottom: buttonPaddingY,
+                      boxShadow: `0 4px 14px 0 ${buttonBgColor}66`,
+                    }}
+                    onClick={() => scrollToSection(buttonLink1)}
+                  >
+                    <span dangerouslySetInnerHTML={{ __html: buttonText1 || '' }} />
+                  </Button>
+                )}
+                {!isBlankHtml(buttonText2) && (
+                  <Button
+                    className='rounded-full font-semibold text-base border-2 bg-transparent transition-all duration-300 hover:scale-105'
+                    variant='outline'
+                    style={{
+                      borderColor: buttonBgColor,
+                      color: buttonBgColor,
+                      paddingLeft: buttonPaddingX,
+                      paddingRight: buttonPaddingX,
+                      paddingTop: buttonPaddingY,
+                      paddingBottom: buttonPaddingY,
+                      backgroundColor: 'transparent',
+                    }}
+                    onClick={() => scrollToSection(buttonLink2)}
+                  >
+                    <span dangerouslySetInnerHTML={{ __html: buttonText2 || '' }} />
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Right side - Image with visual treatment */}

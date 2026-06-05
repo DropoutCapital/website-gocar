@@ -2,7 +2,7 @@ import React from 'react';
 import { useNode } from '@craftjs/core';
 import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
-import { normalizeBuilderLink } from '@/utils/functions';
+import { normalizeBuilderLink, isBlankHtml } from '@/utils/functions';
 
 const appleEase: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 
@@ -80,30 +80,38 @@ export const HeroModerno = ({
             <span className="w-8 h-px" style={{ backgroundColor: hexToRgba(textColor, 0.2) }} />
           </motion.div>
 
-          <div className="space-y-2">
-            <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="text-[2.5rem] sm:text-[3.25rem] lg:text-[3.75rem] xl:text-[4.25rem] font-semibold tracking-[-0.035em] leading-[1.05]"
-              style={{ color: textColor }}
-              dangerouslySetInnerHTML={{ __html: title || '' }} />
-            <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="text-[2.5rem] sm:text-[3.25rem] lg:text-[3.75rem] xl:text-[4.25rem] font-semibold tracking-[-0.035em] leading-[1.05]">
-              <span className="bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(to right, ${accentColor}, ${lighterAccent})` }}
-                dangerouslySetInnerHTML={{ __html: highlightText || '' }} />
-            </motion.h1>
-          </div>
+          {(!isBlankHtml(title) || !isBlankHtml(highlightText)) && (
+            <div className="space-y-2">
+              {!isBlankHtml(title) && (
+                <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+                  className="text-[2.5rem] sm:text-[3.25rem] lg:text-[3.75rem] xl:text-[4.25rem] font-semibold tracking-[-0.035em] leading-[1.05]"
+                  style={{ color: textColor }}
+                  dangerouslySetInnerHTML={{ __html: title || '' }} />
+              )}
+              {!isBlankHtml(highlightText) && (
+                <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+                  className="text-[2.5rem] sm:text-[3.25rem] lg:text-[3.75rem] xl:text-[4.25rem] font-semibold tracking-[-0.035em] leading-[1.05]">
+                  <span className="bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(to right, ${accentColor}, ${lighterAccent})` }}
+                    dangerouslySetInnerHTML={{ __html: highlightText || '' }} />
+                </motion.h1>
+              )}
+            </div>
+          )}
 
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.45, ease: appleEase }}
-            className="text-lg sm:text-xl font-normal leading-relaxed max-w-lg mx-auto"
-            style={{ color: hexToRgba(textColor, 0.5) }}
-            dangerouslySetInnerHTML={{ __html: subtitle || '' }} />
+          {!isBlankHtml(subtitle) && (
+            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.45, ease: appleEase }}
+              className="text-lg sm:text-xl font-normal leading-relaxed max-w-lg mx-auto"
+              style={{ color: hexToRgba(textColor, 0.5) }}
+              dangerouslySetInnerHTML={{ __html: subtitle || '' }} />
+          )}
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5, ease: appleEase }}
             className="flex flex-wrap justify-center gap-x-7 gap-y-3">
-            {trustItems.map((item, i) => (
+            {trustItems.filter((item) => !isBlankHtml(item.text)).map((item, i) => (
               <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 + i * 0.08 }}
                 className="flex items-center gap-2 text-[15px]" style={{ color: hexToRgba(textColor, 0.6) }}>
                 <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: accentColor }} />
@@ -112,20 +120,26 @@ export const HeroModerno = ({
             ))}
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6, ease: appleEase }}
-            className="flex flex-col sm:flex-row items-center gap-4 pt-2">
-            <a href={normalizeBuilderLink(buttonLink)}
-              className="group relative inline-flex items-center justify-center h-14 px-8 text-[17px] font-medium text-white rounded-full transition-all hover:shadow-xl"
-              style={{ backgroundImage: `linear-gradient(to right, ${accentColor}, ${lighten(accentColor, 20)})`, boxShadow: `0 8px 24px ${hexToRgba(accentColor, 0.25)}` }}>
-              <span dangerouslySetInnerHTML={{ __html: buttonText || '' }} />
-              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-300" />
-            </a>
-            <a href={normalizeBuilderLink(buttonLink2)}
-              className="inline-flex items-center justify-center h-14 px-8 text-[17px] font-medium rounded-full transition-all hover:bg-slate-100"
-              style={{ color: hexToRgba(textColor, 0.7) }}
-              dangerouslySetInnerHTML={{ __html: buttonText2 || '' }} />
-          </motion.div>
+          {(!isBlankHtml(buttonText) || !isBlankHtml(buttonText2)) && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6, ease: appleEase }}
+              className="flex flex-col sm:flex-row items-center gap-4 pt-2">
+              {!isBlankHtml(buttonText) && (
+                <a href={normalizeBuilderLink(buttonLink)}
+                  className="group relative inline-flex items-center justify-center h-14 px-8 text-[17px] font-medium text-white rounded-full transition-all hover:shadow-xl"
+                  style={{ backgroundImage: `linear-gradient(to right, ${accentColor}, ${lighten(accentColor, 20)})`, boxShadow: `0 8px 24px ${hexToRgba(accentColor, 0.25)}` }}>
+                  <span dangerouslySetInnerHTML={{ __html: buttonText || '' }} />
+                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-300" />
+                </a>
+              )}
+              {!isBlankHtml(buttonText2) && (
+                <a href={normalizeBuilderLink(buttonLink2)}
+                  className="inline-flex items-center justify-center h-14 px-8 text-[17px] font-medium rounded-full transition-all hover:bg-slate-100"
+                  style={{ color: hexToRgba(textColor, 0.7) }}
+                  dangerouslySetInnerHTML={{ __html: buttonText2 || '' }} />
+              )}
+            </motion.div>
+          )}
 
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.75 }}
             className="flex items-center justify-center gap-5 pt-1 text-[13px]" style={{ color: hexToRgba(textColor, 0.35) }}>
