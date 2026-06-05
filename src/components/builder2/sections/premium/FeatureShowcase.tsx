@@ -4,6 +4,7 @@ import React from 'react';
 import { useNode } from '@craftjs/core';
 import { motion } from 'framer-motion';
 import { Shield, Clock, CreditCard, Award, Headphones, Truck, Star, Zap } from 'lucide-react';
+import { isBlankHtml } from '@/utils/functions';
 
 const ICON_MAP: Record<string, React.FC<{ size?: number; className?: string; style?: React.CSSProperties }>> = {
   Shield, Clock, CreditCard, Award, Headphones, Truck, Star, Zap,
@@ -76,24 +77,30 @@ export const FeatureShowcase = ({
           transition={{ duration: 0.7 }}
           className="max-w-3xl mb-20"
         >
-          <div className="flex items-center gap-3 mb-6">
-            <div className="h-px flex-1 max-w-[40px]" style={{ backgroundColor: accent }} />
-            <p
-              className="text-xs font-semibold uppercase tracking-[0.25em]"
-              style={{ color: accent }}
-              dangerouslySetInnerHTML={{ __html: eyebrowText }}
+          {!isBlankHtml(eyebrowText) && (
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-px flex-1 max-w-[40px]" style={{ backgroundColor: accent }} />
+              <p
+                className="text-xs font-semibold uppercase tracking-[0.25em]"
+                style={{ color: accent }}
+                dangerouslySetInnerHTML={{ __html: eyebrowText }}
+              />
+            </div>
+          )}
+          {!isBlankHtml(sectionTitle) && (
+            <h2
+              className="text-4xl sm:text-5xl lg:text-[3.5rem] font-bold leading-[1.1] mb-5"
+              style={{ color: textColor, letterSpacing: '-0.03em' }}
+              dangerouslySetInnerHTML={{ __html: sectionTitle }}
             />
-          </div>
-          <h2
-            className="text-4xl sm:text-5xl lg:text-[3.5rem] font-bold leading-[1.1] mb-5"
-            style={{ color: textColor, letterSpacing: '-0.03em' }}
-            dangerouslySetInnerHTML={{ __html: sectionTitle }}
-          />
-          <p
-            className="text-lg leading-relaxed max-w-2xl"
-            style={{ color: hexToRgba(textColor, 0.5) }}
-            dangerouslySetInnerHTML={{ __html: subtitle }}
-          />
+          )}
+          {!isBlankHtml(subtitle) && (
+            <p
+              className="text-lg leading-relaxed max-w-2xl"
+              style={{ color: hexToRgba(textColor, 0.5) }}
+              dangerouslySetInnerHTML={{ __html: subtitle }}
+            />
+          )}
         </motion.div>
 
         {/* Bento grid */}
@@ -141,18 +148,22 @@ export const FeatureShowcase = ({
                   </div>
 
                   {/* Title */}
-                  <h3
-                    className={`font-bold mb-3 leading-tight ${isFeatured ? 'text-2xl lg:text-3xl' : 'text-lg'}`}
-                    style={{ color: textColor, letterSpacing: '-0.02em' }}
-                    dangerouslySetInnerHTML={{ __html: f.title }}
-                  />
+                  {!isBlankHtml(f.title) && (
+                    <h3
+                      className={`font-bold mb-3 leading-tight ${isFeatured ? 'text-2xl lg:text-3xl' : 'text-lg'}`}
+                      style={{ color: textColor, letterSpacing: '-0.02em' }}
+                      dangerouslySetInnerHTML={{ __html: f.title }}
+                    />
+                  )}
 
                   {/* Description */}
-                  <p
-                    className={`leading-relaxed ${isFeatured ? 'text-base lg:text-lg' : 'text-[14px]'}`}
-                    style={{ color: hexToRgba(textColor, 0.5) }}
-                    dangerouslySetInnerHTML={{ __html: f.description }}
-                  />
+                  {!isBlankHtml(f.description) && (
+                    <p
+                      className={`leading-relaxed ${isFeatured ? 'text-base lg:text-lg' : 'text-[14px]'}`}
+                      style={{ color: hexToRgba(textColor, 0.5) }}
+                      dangerouslySetInnerHTML={{ __html: f.description }}
+                    />
+                  )}
 
                   {/* Featured card: extra accent element */}
                   {isFeatured && (

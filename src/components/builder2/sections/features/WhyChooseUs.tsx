@@ -2,6 +2,7 @@ import React from 'react';
 import { useNode, useEditor } from '@craftjs/core';
 import useClientStore from '@/store/useClientStore';
 import { useTranslation } from '@/i18n/hooks/useTranslation';
+import { isBlankHtml } from '@/utils/functions';
 import {
   IconCheck,
   IconCurrencyDollar,
@@ -94,10 +95,14 @@ const FeatureCard = ({
       >
         {icon}
       </div>
-      <h3 className='text-xl font-semibold mb-3' style={{ color: cardTextColor }}
-        dangerouslySetInnerHTML={{ __html: title || '' }} />
-      <p className='text-sm leading-relaxed' style={{ color: descriptionColor }}
-        dangerouslySetInnerHTML={{ __html: description || '' }} />
+      {!isBlankHtml(title) && (
+        <h3 className='text-xl font-semibold mb-3' style={{ color: cardTextColor }}
+          dangerouslySetInnerHTML={{ __html: title || '' }} />
+      )}
+      {!isBlankHtml(description) && (
+        <p className='text-sm leading-relaxed' style={{ color: descriptionColor }}
+          dangerouslySetInnerHTML={{ __html: description || '' }} />
+      )}
     </div>
   );
 };
@@ -210,11 +215,13 @@ export const WhyChooseUs = ({
           <p className='text-sm font-semibold uppercase tracking-widest mb-3' style={{ color: finalIconColor }}>
             Nuestras ventajas
           </p>
-          <h2
-            className='text-3xl md:text-4xl lg:text-5xl font-bold'
-            style={{ color: textColor, textAlign: titleAlignment }}
-            dangerouslySetInnerHTML={{ __html: effectiveSectionTitle || '' }}
-          />
+          {!isBlankHtml(effectiveSectionTitle) && (
+            <h2
+              className='text-3xl md:text-4xl lg:text-5xl font-bold'
+              style={{ color: textColor, textAlign: titleAlignment }}
+              dangerouslySetInnerHTML={{ __html: effectiveSectionTitle || '' }}
+            />
+          )}
         </div>
 
         <div className={`grid gap-6 ${columnClass}`}>
