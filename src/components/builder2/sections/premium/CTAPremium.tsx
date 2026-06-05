@@ -4,7 +4,7 @@ import React from 'react';
 import { useNode } from '@craftjs/core';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
-import { normalizeBuilderLink } from '@/utils/functions';
+import { normalizeBuilderLink, isBlankHtml } from '@/utils/functions';
 
 interface CTAPremiumProps {
   title?: string;
@@ -61,24 +61,29 @@ export const CTAPremium = ({
             boxShadow: `0 0 80px ${hexToRgba(accent, 0.06)}, inset 0 1px 0 ${hexToRgba(textColor, 0.05)}`,
           }}
         >
-          <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.15 }}
-            className="text-[2rem] sm:text-[2.5rem] lg:text-[3rem] font-bold mb-6"
-            style={{ color: textColor, letterSpacing: '-0.03em' }}
-            dangerouslySetInnerHTML={{ __html: title }}
-          />
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="text-base sm:text-lg max-w-lg mx-auto mb-10"
-            style={{ color: hexToRgba(textColor, 0.5), lineHeight: '1.7' }}
-            dangerouslySetInnerHTML={{ __html: subtitle }}
-          />
+          {!isBlankHtml(title) && (
+            <motion.h2
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.15 }}
+              className="text-[2rem] sm:text-[2.5rem] lg:text-[3rem] font-bold mb-6"
+              style={{ color: textColor, letterSpacing: '-0.03em' }}
+              dangerouslySetInnerHTML={{ __html: title }}
+            />
+          )}
+          {!isBlankHtml(subtitle) && (
+            <motion.p
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="text-base sm:text-lg max-w-lg mx-auto mb-10"
+              style={{ color: hexToRgba(textColor, 0.5), lineHeight: '1.7' }}
+              dangerouslySetInnerHTML={{ __html: subtitle }}
+            />
+          )}
+          {!isBlankHtml(buttonText) && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -109,6 +114,7 @@ export const CTAPremium = ({
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </a>
           </motion.div>
+          )}
         </motion.div>
       </div>
     </div>

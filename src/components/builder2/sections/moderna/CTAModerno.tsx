@@ -2,7 +2,7 @@ import React from 'react';
 import { useNode } from '@craftjs/core';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
-import { normalizeBuilderLink } from '@/utils/functions';
+import { normalizeBuilderLink, isBlankHtml } from '@/utils/functions';
 
 const appleEase: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 
@@ -24,23 +24,29 @@ export const CTAModerno = ({
         <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full blur-[100px] bg-white/10" />
       </div>
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 text-center">
-        <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-          transition={{ duration: 0.6, ease: appleEase }}
-          className="text-[2rem] sm:text-[2.75rem] font-semibold text-white tracking-tight leading-tight mb-5"
-          dangerouslySetInnerHTML={{ __html: title || '' }} />
-        <motion.p initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.1, ease: appleEase }}
-          className="text-lg sm:text-xl text-white/70 max-w-lg mx-auto mb-10"
-          dangerouslySetInnerHTML={{ __html: subtitle || '' }} />
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2, ease: appleEase }}>
-          <a href={normalizeBuilderLink(buttonLink)}
-            className="group inline-flex items-center justify-center h-14 px-8 text-[17px] font-medium rounded-full bg-white transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
-            style={{ color: accentColor }}>
-            <span dangerouslySetInnerHTML={{ __html: buttonText || '' }} />
-            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-300" />
-          </a>
-        </motion.div>
+        {!isBlankHtml(title) && (
+          <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            transition={{ duration: 0.6, ease: appleEase }}
+            className="text-[2rem] sm:text-[2.75rem] font-semibold text-white tracking-tight leading-tight mb-5"
+            dangerouslySetInnerHTML={{ __html: title || '' }} />
+        )}
+        {!isBlankHtml(subtitle) && (
+          <motion.p initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1, ease: appleEase }}
+            className="text-lg sm:text-xl text-white/70 max-w-lg mx-auto mb-10"
+            dangerouslySetInnerHTML={{ __html: subtitle || '' }} />
+        )}
+        {!isBlankHtml(buttonText) && (
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2, ease: appleEase }}>
+            <a href={normalizeBuilderLink(buttonLink)}
+              className="group inline-flex items-center justify-center h-14 px-8 text-[17px] font-medium rounded-full bg-white transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+              style={{ color: accentColor }}>
+              <span dangerouslySetInnerHTML={{ __html: buttonText || '' }} />
+              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-300" />
+            </a>
+          </motion.div>
+        )}
       </div>
     </div>
   );

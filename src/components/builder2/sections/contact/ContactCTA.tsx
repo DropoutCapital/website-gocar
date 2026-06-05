@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import useClientStore from '@/store/useClientStore';
 import { useTranslation } from '@/i18n/hooks/useTranslation';
+import { isBlankHtml } from '@/utils/functions';
 
 interface ContactCTAProps {
   title?: string;
@@ -90,32 +91,38 @@ export const ContactCTA = ({
       />
 
       <div className='relative z-10 max-w-4xl mx-auto py-20 md:py-24 px-6 text-center'>
-        <h2
-          className='text-4xl md:text-5xl font-bold leading-tight tracking-tight'
-          style={{ color: textColor }}
-          dangerouslySetInnerHTML={{ __html: effectiveTitle || '' }}
-        />
+        {!isBlankHtml(effectiveTitle) && (
+          <h2
+            className='text-4xl md:text-5xl font-bold leading-tight tracking-tight'
+            style={{ color: textColor }}
+            dangerouslySetInnerHTML={{ __html: effectiveTitle || '' }}
+          />
+        )}
 
-        <p
-          className='mt-4 text-lg md:text-xl max-w-2xl mx-auto'
-          style={{ color: textColor, opacity: 0.8 }}
-          dangerouslySetInnerHTML={{ __html: effectiveSubtitle || '' }}
-        />
+        {!isBlankHtml(effectiveSubtitle) && (
+          <p
+            className='mt-4 text-lg md:text-xl max-w-2xl mx-auto'
+            style={{ color: textColor, opacity: 0.8 }}
+            dangerouslySetInnerHTML={{ __html: effectiveSubtitle || '' }}
+          />
+        )}
 
-        <div className='mt-10'>
-          <Button
-            size='lg'
-            className='group rounded-full px-10 py-4 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105'
-            style={{
-              backgroundColor: '#ffffff',
-              color: finalButtonBgColor,
-            }}
-            onClick={handleClick}
-          >
-            <span dangerouslySetInnerHTML={{ __html: effectiveButtonText || '' }} />
-            <ArrowRight className='ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300' />
-          </Button>
-        </div>
+        {!isBlankHtml(effectiveButtonText) && (
+          <div className='mt-10'>
+            <Button
+              size='lg'
+              className='group rounded-full px-10 py-4 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105'
+              style={{
+                backgroundColor: '#ffffff',
+                color: finalButtonBgColor,
+              }}
+              onClick={handleClick}
+            >
+              <span dangerouslySetInnerHTML={{ __html: effectiveButtonText || '' }} />
+              <ArrowRight className='ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300' />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
