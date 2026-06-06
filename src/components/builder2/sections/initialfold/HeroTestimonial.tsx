@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNode } from '@craftjs/core';
 import { User, Star, Quote } from 'lucide-react';
+import { isBlankHtml } from '@/utils/functions';
 
 interface TestimonialProps {
   author: string;
@@ -25,9 +26,9 @@ const Testimonial = ({ author, role, quote, avatar, rating }: TestimonialProps) 
       ))}
     </div>
     <Quote size={30} className='text-gray-300 mb-3' />
-    <p className='text-gray-700 mb-4 italic'>{quote}</p>
-    <h3 className='font-semibold text-gray-900'>{author}</h3>
-    <p className='text-gray-500 text-sm'>{role}</p>
+    {!isBlankHtml(quote) && <p className='text-gray-700 mb-4 italic'>{quote}</p>}
+    {!isBlankHtml(author) && <h3 className='font-semibold text-gray-900'>{author}</h3>}
+    {!isBlankHtml(role) && <p className='text-gray-500 text-sm'>{role}</p>}
   </div>
 );
 
@@ -100,8 +101,8 @@ export const HeroTestimonial = ({
       <div style={{ backgroundColor: overlayColor, opacity: overlayOpacity }} className='absolute inset-0 z-0' />
       <div className='container mx-auto px-4 z-10 relative py-16'>
         <div className='max-w-3xl mx-auto text-center mb-12'>
-          <h1 style={{ color: textColor }} className='text-4xl md:text-5xl font-bold mb-4'>{title}</h1>
-          <p style={{ color: textColor }} className='text-lg md:text-xl'>{subtitle}</p>
+          {!isBlankHtml(title) && <h1 style={{ color: textColor }} className='text-4xl md:text-5xl font-bold mb-4'>{title}</h1>}
+          {!isBlankHtml(subtitle) && <p style={{ color: textColor }} className='text-lg md:text-xl'>{subtitle}</p>}
         </div>
         <div className='grid grid-cols-1 md:grid-cols-3 gap-6 mt-8'>
           <Testimonial author={testimonial1Author} role={testimonial1Role} quote={testimonial1Quote} avatar={testimonial1Avatar} rating={testimonial1Rating} />

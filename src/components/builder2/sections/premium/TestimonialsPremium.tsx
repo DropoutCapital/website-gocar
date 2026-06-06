@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useNode } from '@craftjs/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { isBlankHtml } from '@/utils/functions';
 
 interface TestimonialItem {
   quote: string;
@@ -46,15 +47,17 @@ export const TestimonialsPremium = ({
     >
       <div className="max-w-4xl mx-auto px-6 py-24 lg:py-32 text-center">
         {/* Eyebrow */}
-        <motion.p
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0 }}
-          className="text-xs font-medium uppercase tracking-[0.3em] mb-16"
-          style={{ color: accent }}
-          dangerouslySetInnerHTML={{ __html: eyebrowText }}
-        />
+        {!isBlankHtml(eyebrowText) && (
+          <motion.p
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0 }}
+            className="text-xs font-medium uppercase tracking-[0.3em] mb-16"
+            style={{ color: accent }}
+            dangerouslySetInnerHTML={{ __html: eyebrowText }}
+          />
+        )}
 
         {/* Giant quote mark */}
         <div className="relative">
@@ -80,22 +83,28 @@ export const TestimonialsPremium = ({
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <p
-                    className="text-xl sm:text-2xl lg:text-3xl font-light italic leading-relaxed max-w-3xl mx-auto"
-                    style={{ color: hexToRgba(textColor, 0.85) }}
-                    dangerouslySetInnerHTML={{ __html: t.quote }}
-                  />
+                  {!isBlankHtml(t.quote) && (
+                    <p
+                      className="text-xl sm:text-2xl lg:text-3xl font-light italic leading-relaxed max-w-3xl mx-auto"
+                      style={{ color: hexToRgba(textColor, 0.85) }}
+                      dangerouslySetInnerHTML={{ __html: t.quote }}
+                    />
+                  )}
                   <div className="mt-10 space-y-1">
-                    <p
-                      className="text-base font-semibold"
-                      style={{ color: textColor }}
-                      dangerouslySetInnerHTML={{ __html: t.authorName }}
-                    />
-                    <p
-                      className="text-sm"
-                      style={{ color: hexToRgba(textColor, 0.4) }}
-                      dangerouslySetInnerHTML={{ __html: t.authorRole }}
-                    />
+                    {!isBlankHtml(t.authorName) && (
+                      <p
+                        className="text-base font-semibold"
+                        style={{ color: textColor }}
+                        dangerouslySetInnerHTML={{ __html: t.authorName }}
+                      />
+                    )}
+                    {!isBlankHtml(t.authorRole) && (
+                      <p
+                        className="text-sm"
+                        style={{ color: hexToRgba(textColor, 0.4) }}
+                        dangerouslySetInnerHTML={{ __html: t.authorRole }}
+                      />
+                    )}
                   </div>
                 </motion.div>
               )}
