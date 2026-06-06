@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNode } from '@craftjs/core';
 import { ChevronDown } from 'lucide-react';
+import { isBlankHtml } from '@/utils/functions';
 
 interface FAQItemProps {
   question: string;
@@ -51,8 +52,12 @@ const FAQItem = ({
         className='w-full flex justify-between items-center text-left focus:outline-none py-5 gap-4'
         onClick={onToggle}
       >
-        <h3 className='text-lg font-medium flex-1' style={{ color: questionColor }}
-          dangerouslySetInnerHTML={{ __html: question || '' }} />
+        {!isBlankHtml(question) ? (
+          <h3 className='text-lg font-medium flex-1' style={{ color: questionColor }}
+            dangerouslySetInnerHTML={{ __html: question || '' }} />
+        ) : (
+          <span className='flex-1' />
+        )}
         <div
           className='flex-shrink-0 transition-transform duration-300'
           style={{
@@ -70,8 +75,10 @@ const FAQItem = ({
           overflow: 'hidden',
         }}
       >
-        <div className='pb-5 text-base leading-relaxed' style={{ color: answerColor }}
-          dangerouslySetInnerHTML={{ __html: answer || '' }} />
+        {!isBlankHtml(answer) && (
+          <div className='pb-5 text-base leading-relaxed' style={{ color: answerColor }}
+            dangerouslySetInnerHTML={{ __html: answer || '' }} />
+        )}
       </div>
     </div>
   );
@@ -153,11 +160,13 @@ export const FAQ = ({
           <p className='text-sm font-semibold uppercase tracking-widest mb-3' style={{ color: finalAccentColor }}>
             Preguntas frecuentes
           </p>
-          <h2
-            className='text-3xl md:text-4xl lg:text-5xl font-bold'
-            style={{ color: titleColor, textAlign: titleAlignment }}
-            dangerouslySetInnerHTML={{ __html: sectionTitle || '' }}
-          />
+          {!isBlankHtml(sectionTitle) && (
+            <h2
+              className='text-3xl md:text-4xl lg:text-5xl font-bold'
+              style={{ color: titleColor, textAlign: titleAlignment }}
+              dangerouslySetInnerHTML={{ __html: sectionTitle || '' }}
+            />
+          )}
         </div>
 
         <div className={style === 'minimal' ? 'divide-y-0' : 'space-y-0'}>
