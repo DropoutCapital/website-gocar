@@ -2,6 +2,7 @@ import React from 'react';
 import { useNode } from '@craftjs/core';
 import { motion } from 'framer-motion';
 import { Star, Sparkles } from 'lucide-react';
+import { isBlankHtml } from '@/utils/functions';
 
 const appleEase: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 
@@ -30,14 +31,20 @@ export const TestimonialsModerno = ({
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: appleEase }} viewport={{ once: true }} className="text-center mb-16 lg:mb-20">
-          <motion.div initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }}
-            transition={{ type: 'spring', stiffness: 300, delay: 0.1 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white mb-6"
-            style={{ backgroundImage: `linear-gradient(to right, ${accentColor}, ${lighten(accentColor, 30)})` }}>
-            <Sparkles className="h-4 w-4" /><span dangerouslySetInnerHTML={{ __html: eyebrowText || '' }} />
-          </motion.div>
-          <h2 className="text-[2rem] sm:text-[2.75rem] font-semibold tracking-tight mb-4" style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: sectionTitle || '' }} />
-          <p className="text-lg max-w-md mx-auto" style={{ color: hexToRgba(textColor, 0.5) }} dangerouslySetInnerHTML={{ __html: sectionSubtitle || '' }} />
+          {!isBlankHtml(eyebrowText) && (
+            <motion.div initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }}
+              transition={{ type: 'spring', stiffness: 300, delay: 0.1 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white mb-6"
+              style={{ backgroundImage: `linear-gradient(to right, ${accentColor}, ${lighten(accentColor, 30)})` }}>
+              <Sparkles className="h-4 w-4" /><span dangerouslySetInnerHTML={{ __html: eyebrowText || '' }} />
+            </motion.div>
+          )}
+          {!isBlankHtml(sectionTitle) && (
+            <h2 className="text-[2rem] sm:text-[2.75rem] font-semibold tracking-tight mb-4" style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: sectionTitle || '' }} />
+          )}
+          {!isBlankHtml(sectionSubtitle) && (
+            <p className="text-lg max-w-md mx-auto" style={{ color: hexToRgba(textColor, 0.5) }} dangerouslySetInnerHTML={{ __html: sectionSubtitle || '' }} />
+          )}
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
@@ -52,15 +59,21 @@ export const TestimonialsModerno = ({
                 <div className="flex gap-0.5 mb-5">
                   {Array.from({ length: t.stars }).map((_, i) => (<Star key={i} size={16} fill={starColor} style={{ color: starColor }} />))}
                 </div>
-                <p className="text-[15px] leading-relaxed mb-8" style={{ color: hexToRgba(textColor, 0.7) }} dangerouslySetInnerHTML={{ __html: `&ldquo;${t.quote || ''}&rdquo;` }} />
+                {!isBlankHtml(t.quote) && (
+                  <p className="text-[15px] leading-relaxed mb-8" style={{ color: hexToRgba(textColor, 0.7) }} dangerouslySetInnerHTML={{ __html: `&ldquo;${t.quote || ''}&rdquo;` }} />
+                )}
                 <div className="flex items-center gap-3 mt-auto">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 overflow-hidden"
                     style={{ backgroundColor: hexToRgba(accentColor, 0.1), color: accentColor }}>
                     {t.avatarUrl ? <img src={t.avatarUrl} alt={t.authorName} className="w-full h-full rounded-full object-cover" /> : t.authorName.charAt(0)}
                   </div>
                   <div>
-                    <p className="text-[14px] font-semibold" style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: t.authorName || '' }} />
-                    <p className="text-[13px]" style={{ color: hexToRgba(textColor, 0.4) }} dangerouslySetInnerHTML={{ __html: t.authorRole || '' }} />
+                    {!isBlankHtml(t.authorName) && (
+                      <p className="text-[14px] font-semibold" style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: t.authorName || '' }} />
+                    )}
+                    {!isBlankHtml(t.authorRole) && (
+                      <p className="text-[13px]" style={{ color: hexToRgba(textColor, 0.4) }} dangerouslySetInnerHTML={{ __html: t.authorRole || '' }} />
+                    )}
                   </div>
                 </div>
               </div>

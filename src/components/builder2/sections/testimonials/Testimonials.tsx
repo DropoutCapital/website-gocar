@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNode } from '@craftjs/core';
 import { Star, User } from 'lucide-react';
+import { isBlankHtml } from '@/utils/functions';
 
 function hexToRgba(hex: string, alpha: number): string {
   const clean = hex.replace('#', '');
@@ -64,11 +65,13 @@ const TestimonialCard = ({
       </div>
 
       {/* Testimonial text */}
-      <p className='mb-8 text-[15px] leading-[1.8] flex-1 relative' style={{ color: testimonialColor }}>
-        <span className='text-4xl font-serif leading-none mr-1.5 -ml-1 align-top' style={{ color: hexToRgba(starColor, 0.3) }}>&ldquo;</span>
-        <span dangerouslySetInnerHTML={{ __html: testimonial || '' }} />
-        <span className='text-4xl font-serif leading-none ml-1' style={{ color: hexToRgba(starColor, 0.3) }}>&rdquo;</span>
-      </p>
+      {!isBlankHtml(testimonial) && (
+        <p className='mb-8 text-[15px] leading-[1.8] flex-1 relative' style={{ color: testimonialColor }}>
+          <span className='text-4xl font-serif leading-none mr-1.5 -ml-1 align-top' style={{ color: hexToRgba(starColor, 0.3) }}>&ldquo;</span>
+          <span dangerouslySetInnerHTML={{ __html: testimonial || '' }} />
+          <span className='text-4xl font-serif leading-none ml-1' style={{ color: hexToRgba(starColor, 0.3) }}>&rdquo;</span>
+        </p>
+      )}
 
       {/* Author */}
       <div className='flex items-center gap-3.5 pt-6' style={{ borderTop: `1px solid ${hexToRgba(nameColor, 0.06)}` }}>
@@ -86,10 +89,14 @@ const TestimonialCard = ({
           )}
         </div>
         <div>
-          <h4 className='font-semibold text-sm' style={{ color: nameColor }}
-            dangerouslySetInnerHTML={{ __html: name || '' }} />
-          <p className='text-xs mt-0.5' style={{ color: roleColor }}
-            dangerouslySetInnerHTML={{ __html: role || '' }} />
+          {!isBlankHtml(name) && (
+            <h4 className='font-semibold text-sm' style={{ color: nameColor }}
+              dangerouslySetInnerHTML={{ __html: name || '' }} />
+          )}
+          {!isBlankHtml(role) && (
+            <p className='text-xs mt-0.5' style={{ color: roleColor }}
+              dangerouslySetInnerHTML={{ __html: role || '' }} />
+          )}
         </div>
       </div>
     </div>
@@ -159,12 +166,14 @@ export const Testimonials = ({
             </p>
             <div className='h-px w-8' style={{ backgroundColor: finalStarColor }} />
           </div>
-          <h2
-            className='text-3xl md:text-4xl lg:text-5xl font-bold leading-tight'
-            style={{ color: titleColor, textAlign: titleAlignment, letterSpacing: '-0.02em' }}
-            dangerouslySetInnerHTML={{ __html: sectionTitle || '' }}
-          />
-          {subtitle && (
+          {!isBlankHtml(sectionTitle) && (
+            <h2
+              className='text-3xl md:text-4xl lg:text-5xl font-bold leading-tight'
+              style={{ color: titleColor, textAlign: titleAlignment, letterSpacing: '-0.02em' }}
+              dangerouslySetInnerHTML={{ __html: sectionTitle || '' }}
+            />
+          )}
+          {!isBlankHtml(subtitle) && (
             <p className='mt-4 text-lg max-w-2xl mx-auto' style={{ color: hexToRgba(titleColor, 0.5) }}
               dangerouslySetInnerHTML={{ __html: subtitle }} />
           )}
