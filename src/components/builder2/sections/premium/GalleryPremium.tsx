@@ -3,6 +3,7 @@
 import React from 'react';
 import { useNode } from '@craftjs/core';
 import { motion } from 'framer-motion';
+import Marquee from 'react-fast-marquee';
 
 interface GalleryImage {
   imageUrl: string;
@@ -62,23 +63,12 @@ export const GalleryPremium = ({
           />
         </motion.div>
 
-        {/* Horizontal scroll gallery */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="flex gap-5 overflow-x-auto pb-6 px-4 snap-x snap-mandatory"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as any}
-        >
+        {/* Auto-scrolling gallery */}
+        <Marquee gradient={false} speed={40} pauseOnHover autoFill>
           {images.map((img, i) => (
-            <motion.div
+            <div
               key={i}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.1 * i }}
-              className="snap-center flex-shrink-0 w-[80vw] sm:w-[55vw] lg:w-[38vw] aspect-[16/10] rounded-2xl overflow-hidden relative group cursor-pointer"
+              className="mx-2.5 w-[80vw] sm:w-[55vw] lg:w-[38vw] aspect-[16/10] rounded-2xl overflow-hidden relative group cursor-pointer"
             >
               <img
                 src={img.imageUrl}
@@ -91,22 +81,9 @@ export const GalleryPremium = ({
               </div>
               {/* Subtle border */}
               <div className="absolute inset-0 rounded-2xl" style={{ border: `1px solid ${hexToRgba(textColor, 0.08)}` }} />
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
-
-        {/* Scroll indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="flex justify-center mt-6 gap-1"
-        >
-          {images.map((_, i) => (
-            <div key={i} className="w-8 h-1 rounded-full" style={{ backgroundColor: hexToRgba(textColor, 0.15) }} />
-          ))}
-        </motion.div>
+        </Marquee>
       </div>
     </div>
   );
