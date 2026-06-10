@@ -2,6 +2,7 @@ import React from 'react';
 import { useNode, useEditor } from '@craftjs/core';
 import { Facebook, Instagram, Twitter, Youtube, Linkedin, MessageCircle } from 'lucide-react';
 import useClientStore from '@/store/useClientStore';
+import { resolveNavLink } from '@/utils/functions';
 
 interface FooterLink {
   text: string;
@@ -166,18 +167,22 @@ export const Footer = ({
                 {column.title}
               </h4>
               <ul className='space-y-3'>
-                {column.links.map((link, linkIndex) => (
-                  <li key={linkIndex}>
-                    <a
-                      href={link.url}
-                      onClick={(e) => handleLinkClick(e, link.url)}
-                      className='text-sm transition-colors duration-200 hover:opacity-80'
-                      style={{ color: textColor }}
-                    >
-                      {link.text}
-                    </a>
-                  </li>
-                ))}
+                {column.links.map((link, linkIndex) => {
+                  const { href, isExternal } = resolveNavLink(link.url);
+                  return (
+                    <li key={linkIndex}>
+                      <a
+                        href={href}
+                        {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                        onClick={(e) => handleLinkClick(e, link.url)}
+                        className='text-sm transition-colors duration-200 hover:opacity-80'
+                        style={{ color: textColor }}
+                      >
+                        {link.text}
+                      </a>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}

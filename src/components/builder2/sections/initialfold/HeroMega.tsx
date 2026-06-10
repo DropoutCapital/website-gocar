@@ -7,6 +7,7 @@ import { useNode, useEditor } from '@craftjs/core';
 import useClientStore from '@/store/useClientStore';
 import useVehiclesStore from '@/store/useVehiclesStore';
 import useVehicleFiltersStore from '@/store/useVehicleFiltersStore';
+import { resolveNavLink } from '@/utils/functions';
 import { Search } from 'lucide-react';
 
 interface NavLink {
@@ -104,6 +105,7 @@ export const HeroMega = ({
 
   const primaryColor = client?.theme?.light?.primary || '#dc2626';
   const finalCtaBgColor = ctaBgColor || primaryColor;
+  const cta = resolveNavLink(ctaUrl);
   const companyName = client?.name || 'Automotora';
   const finalLogoUrl = logoUrl || client?.logo_dark || client?.logo || '';
 
@@ -186,23 +188,26 @@ export const HeroMega = ({
 
             {/* Desktop links */}
             <div className="hidden lg:flex items-center gap-1">
-              {links.map((link, i) => (
-                <Link
-                  key={i}
-                  href={link.url}
-                  onClick={handleNavClick}
-                  className="px-3 py-2 text-sm font-semibold rounded-md transition-opacity hover:opacity-70 whitespace-nowrap"
-                  style={{ color: navTextColor }}
-                >
-                  {link.text}
-                </Link>
-              ))}
+              {links.map((link, i) => {
+                const { href, isExternal } = resolveNavLink(link.url);
+                const cls = "px-3 py-2 text-sm font-semibold rounded-md transition-opacity hover:opacity-70 whitespace-nowrap";
+                return isExternal ? (
+                  <a key={i} href={href} target="_blank" rel="noopener noreferrer" onClick={handleNavClick} className={cls} style={{ color: navTextColor }}>
+                    {link.text}
+                  </a>
+                ) : (
+                  <Link key={i} href={href} onClick={handleNavClick} className={cls} style={{ color: navTextColor }}>
+                    {link.text}
+                  </Link>
+                );
+              })}
             </div>
 
             {/* Right */}
             <div className="flex items-center gap-3">
               <Link
-                href={ctaUrl}
+                href={cta.href}
+                {...(cta.isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                 onClick={handleNavClick}
                 className="hidden lg:block px-5 py-2.5 text-sm font-semibold rounded-md transition-opacity hover:opacity-90"
                 style={{ backgroundColor: finalCtaBgColor, color: ctaTextColor }}
@@ -224,21 +229,29 @@ export const HeroMega = ({
         {mobileOpen && (
           <div className="lg:hidden relative z-20 mx-4 mb-2 rounded-2xl overflow-hidden bg-white shadow-xl">
             <ul className="px-1 py-1">
-              {links.map((link, i) => (
-                <li key={i} className="list-none">
-                  <Link
-                    href={link.url}
-                    onClick={(e) => { handleNavClick(e); setMobileOpen(false); }}
-                    className="block w-full rounded-xl px-4 py-3 text-base font-medium text-gray-800 hover:bg-gray-50"
-                  >
-                    {link.text}
-                  </Link>
-                </li>
-              ))}
+              {links.map((link, i) => {
+                const { href, isExternal } = resolveNavLink(link.url);
+                const cls = "block w-full rounded-xl px-4 py-3 text-base font-medium text-gray-800 hover:bg-gray-50";
+                const onClick = (e: React.MouseEvent) => { handleNavClick(e); setMobileOpen(false); };
+                return (
+                  <li key={i} className="list-none">
+                    {isExternal ? (
+                      <a href={href} target="_blank" rel="noopener noreferrer" onClick={onClick} className={cls}>
+                        {link.text}
+                      </a>
+                    ) : (
+                      <Link href={href} onClick={onClick} className={cls}>
+                        {link.text}
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
             <div className="p-3 border-t border-gray-100">
               <Link
-                href={ctaUrl}
+                href={cta.href}
+                {...(cta.isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                 onClick={(e) => { handleNavClick(e); setMobileOpen(false); }}
                 className="flex items-center justify-center w-full px-4 py-2.5 text-sm font-semibold rounded-xl"
                 style={{ backgroundColor: finalCtaBgColor, color: ctaTextColor }}
