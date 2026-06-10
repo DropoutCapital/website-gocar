@@ -108,12 +108,14 @@ function extractBuilderNav(
 
     const nodes = parsed.nodes && typeof parsed.nodes === 'object' ? parsed.nodes : parsed;
 
-    // Buscar el nodo navbar (BuilderNavbar o NavbarSimple).
+    // Buscar el nodo navbar (BuilderNavbar, NavbarSimple o HeroMega, que es un
+    // megacomponente con su propio navbar embebido). Las props de navegación
+    // (links, ctaText, ctaUrl) tienen la misma forma, así que se leen igual.
     let navNodeId: string | null = null;
     let navNode: any = null;
     for (const [id, node] of Object.entries(nodes) as [string, any][]) {
       const rn = node?.type?.resolvedName;
-      if (rn === 'BuilderNavbar' || rn === 'NavbarSimple') {
+      if (rn === 'BuilderNavbar' || rn === 'NavbarSimple' || rn === 'HeroMega') {
         navNodeId = id;
         navNode = node;
         break;
@@ -132,9 +134,10 @@ function extractBuilderNav(
         return { name: text, href: l.url as string, icon: iconForUrl(l.url) };
       });
 
-    // El CTA solo existe en BuilderNavbar (NavbarSimple no tiene).
+    // El CTA existe en BuilderNavbar y HeroMega (NavbarSimple no tiene).
     let cta: { name: string; href: string } | null = null;
-    if (navNode.type?.resolvedName === 'BuilderNavbar' && props.ctaUrl && props.ctaText) {
+    const rnNav = navNode.type?.resolvedName;
+    if ((rnNav === 'BuilderNavbar' || rnNav === 'HeroMega') && props.ctaUrl && props.ctaText) {
       let ctaText = props.ctaText as string;
       const ctaKey = `home::${navNodeId}::ctaText`;
       if (translations && ctaKey in translations && translations[ctaKey]) ctaText = translations[ctaKey];
