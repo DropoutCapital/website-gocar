@@ -10,3 +10,4 @@ export { HeroImageDivided } from './HeroImageDivided';
 export { HeroWithLogo } from './HeroWithLogo';
 export { HeroWelcome } from './HeroWelcome';
 export { HeroWithVideoEmbed } from './HeroWithVideoEmbed';
+export { HeroMega } from './HeroMega';
