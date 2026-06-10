@@ -4,6 +4,7 @@ import { useNode, useEditor } from '@craftjs/core';
 import useClientStore from '@/store/useClientStore';
 import useThemeStore from '@/store/useThemeStore';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
+import { resolveNavLink } from '@/utils/functions';
 
 interface NavLink {
   text: string;
@@ -138,19 +139,23 @@ export const NavbarSimple = ({
         <div className="flex items-center h-16 gap-4">
           {/* Desktop nav links */}
           <div className={`hidden sm:flex flex-1 items-center gap-1 ${ALIGN_MAP[align] || 'justify-center'}`}>
-            {links.map((link, i) => (
-              <Link
-                key={i}
-                href={link.url}
-                className="px-3 py-2 text-sm font-medium rounded-md transition-colors hover:opacity-80"
-                style={{
-                  color: isActiveLink(link.url) ? primaryColor : effectiveText,
-                  fontWeight: isActiveLink(link.url) ? 600 : 500,
-                }}
-              >
-                {link.text}
-              </Link>
-            ))}
+            {links.map((link, i) => {
+              const { href, isExternal } = resolveNavLink(link.url);
+              const cls = "px-3 py-2 text-sm font-medium rounded-md transition-colors hover:opacity-80";
+              const st = {
+                color: isActiveLink(link.url) ? primaryColor : effectiveText,
+                fontWeight: isActiveLink(link.url) ? 600 : 500,
+              };
+              return isExternal ? (
+                <a key={i} href={href} target="_blank" rel="noopener noreferrer" className={cls} style={st}>
+                  {link.text}
+                </a>
+              ) : (
+                <Link key={i} href={href} className={cls} style={st}>
+                  {link.text}
+                </Link>
+              );
+            })}
           </div>
 
           {/* Right side controls (only if client has them) */}
@@ -215,25 +220,32 @@ export const NavbarSimple = ({
             <ul className="px-1 py-1">
               {links.map((link, i) => {
                 const active = isActiveLink(link.url);
+                const { href, isExternal } = resolveNavLink(link.url);
+                const cls = "block w-full rounded-xl px-4 py-3 transition-colors";
+                const st = {
+                  backgroundColor: active ? `${primaryColor}15` : 'transparent',
+                  color: active ? primaryColor : effectiveText,
+                  fontWeight: active ? 600 : 400,
+                };
+                const inner = (
+                  <div className="flex items-center justify-between">
+                    <span className="text-base">{link.text}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: active ? 1 : 0.4 }}>
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </div>
+                );
                 return (
                   <li key={i} className="list-none">
-                    <Link
-                      href={link.url}
-                      onClick={() => setMobileOpen(false)}
-                      className="block w-full rounded-xl px-4 py-3 transition-colors"
-                      style={{
-                        backgroundColor: active ? `${primaryColor}15` : 'transparent',
-                        color: active ? primaryColor : effectiveText,
-                        fontWeight: active ? 600 : 400,
-                      }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-base">{link.text}</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: active ? 1 : 0.4 }}>
-                          <polyline points="9 18 15 12 9 6" />
-                        </svg>
-                      </div>
-                    </Link>
+                    {isExternal ? (
+                      <a href={href} target="_blank" rel="noopener noreferrer" onClick={() => setMobileOpen(false)} className={cls} style={st}>
+                        {inner}
+                      </a>
+                    ) : (
+                      <Link href={href} onClick={() => setMobileOpen(false)} className={cls} style={st}>
+                        {inner}
+                      </Link>
+                    )}
                   </li>
                 );
               })}

@@ -78,3 +78,33 @@ export const normalizeBuilderLink = (link: string): string => {
   if (link.startsWith('#')) return `/${link.slice(1)}`;
   return link;
 };
+
+/**
+ * Resuelve un link del builder distinguiendo internos vs externos.
+ *
+ * El bug que arregla: un link como `instagram.com/foo` o `www.cliente.cl`
+ * (sin `https://`) lo tomaba el navegador / el <Link> de Next como ruta
+ * RELATIVA, así que le pegaba el dominio de la web adelante
+ * (`carssale.cl/instagram.com/foo`). Acá detectamos dominios "pelados" y los
+ * tratamos como externos agregándoles `https://`.
+ *
+ * - `https://`, `http://`, `mailto:`, `tel:` → externo, tal cual.
+ * - `//host` (protocol-relative) → externo con `https:`.
+ * - `/ruta`, `#ancla` → interno (lo maneja el <Link> de Next).
+ * - `dominio.tld/...` (tiene un punto antes de la primera `/`) → externo,
+ *   se le antepone `https://`.
+ * - cualquier otra cosa → interno bajo `/`.
+ */
+export const resolveNavLink = (
+  raw?: string | null
+): { href: string; isExternal: boolean } => {
+  const link = (raw || '').trim();
+  if (!link) return { href: '#', isExternal: false };
+  if (/^(https?:\/\/|mailto:|tel:)/i.test(link)) return { href: link, isExternal: true };
+  if (link.startsWith('//')) return { href: `https:${link}`, isExternal: true };
+  if (link.startsWith('/') || link.startsWith('#')) return { href: link, isExternal: false };
+  // ¿dominio pelado? p.ej. "instagram.com/x" o "www.cliente.cl"
+  const firstSegment = link.split(/[/?#]/)[0];
+  if (firstSegment.includes('.')) return { href: `https://${link}`, isExternal: true };
+  return { href: `/${link}`, isExternal: false };
+};

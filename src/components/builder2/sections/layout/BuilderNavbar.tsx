@@ -4,6 +4,7 @@ import { useNode, useEditor } from '@craftjs/core';
 import useClientStore from '@/store/useClientStore';
 import useThemeStore from '@/store/useThemeStore';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
+import { resolveNavLink } from '@/utils/functions';
 
 interface NavLink {
   text: string;
@@ -122,6 +123,7 @@ export const BuilderNavbar = ({
 
   const primaryColor = client?.theme?.light?.primary || '#e05d31';
   const finalCtaBgColor = ctaBgColor || primaryColor;
+  const cta = resolveNavLink(ctaUrl);
   const companyName = client?.name || 'Automotora';
   const hasDarkMode = !!client?.has_dark_mode;
   const hasLanguageSelector = !!client?.has_language_selector;
@@ -187,19 +189,23 @@ export const BuilderNavbar = ({
 
           {/* Desktop nav links */}
           <div className="hidden sm:flex items-center gap-1">
-            {links.map((link, i) => (
-              <Link
-                key={i}
-                href={link.url}
-                className="px-3 py-2 text-sm font-medium rounded-md transition-colors hover:opacity-80 whitespace-nowrap"
-                style={{
-                  color: isActiveLink(link.url) ? primaryColor : effectiveText,
-                  fontWeight: isActiveLink(link.url) ? 600 : 500,
-                }}
-              >
-                {link.text}
-              </Link>
-            ))}
+            {links.map((link, i) => {
+              const { href, isExternal } = resolveNavLink(link.url);
+              const linkClass = "px-3 py-2 text-sm font-medium rounded-md transition-colors hover:opacity-80 whitespace-nowrap";
+              const linkStyle = {
+                color: isActiveLink(link.url) ? primaryColor : effectiveText,
+                fontWeight: isActiveLink(link.url) ? 600 : 500,
+              };
+              return isExternal ? (
+                <a key={i} href={href} target="_blank" rel="noopener noreferrer" className={linkClass} style={linkStyle}>
+                  {link.text}
+                </a>
+              ) : (
+                <Link key={i} href={href} className={linkClass} style={linkStyle}>
+                  {link.text}
+                </Link>
+              );
+            })}
           </div>
 
           {/* Right side */}
@@ -220,7 +226,8 @@ export const BuilderNavbar = ({
               </button>
             )}
             <Link
-              href={ctaUrl}
+              href={cta.href}
+              {...(cta.isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
               className="hidden sm:block px-4 py-2 text-sm font-medium rounded-md transition-colors hover:opacity-90"
               style={{
                 backgroundColor: finalCtaBgColor,
@@ -277,25 +284,32 @@ export const BuilderNavbar = ({
             <ul className="px-1 py-1">
               {links.map((link, i) => {
                 const active = isActiveLink(link.url);
+                const { href, isExternal } = resolveNavLink(link.url);
+                const inner = (
+                  <div className="flex items-center justify-between">
+                    <span className="text-base">{link.text}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: active ? 1 : 0.4 }}>
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </div>
+                );
+                const linkClass = "block w-full rounded-xl px-4 py-3 transition-colors";
+                const linkStyle = {
+                  backgroundColor: active ? `${primaryColor}15` : 'transparent',
+                  color: active ? primaryColor : effectiveText,
+                  fontWeight: active ? 600 : 400,
+                };
                 return (
                   <li key={i} className="list-none">
-                    <Link
-                      href={link.url}
-                      onClick={() => setMobileOpen(false)}
-                      className="block w-full rounded-xl px-4 py-3 transition-colors"
-                      style={{
-                        backgroundColor: active ? `${primaryColor}15` : 'transparent',
-                        color: active ? primaryColor : effectiveText,
-                        fontWeight: active ? 600 : 400,
-                      }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-base">{link.text}</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: active ? 1 : 0.4 }}>
-                          <polyline points="9 18 15 12 9 6" />
-                        </svg>
-                      </div>
-                    </Link>
+                    {isExternal ? (
+                      <a href={href} target="_blank" rel="noopener noreferrer" onClick={() => setMobileOpen(false)} className={linkClass} style={linkStyle}>
+                        {inner}
+                      </a>
+                    ) : (
+                      <Link href={href} onClick={() => setMobileOpen(false)} className={linkClass} style={linkStyle}>
+                        {inner}
+                      </Link>
+                    )}
                   </li>
                 );
               })}
@@ -304,7 +318,8 @@ export const BuilderNavbar = ({
             {/* CTA button */}
             <div className="p-3" style={{ borderTop: `1px solid ${isDarkBg || theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}` }}>
               <Link
-                href={ctaUrl}
+                href={cta.href}
+                {...(cta.isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center justify-center w-full px-4 py-2.5 text-sm font-medium rounded-xl transition-colors hover:opacity-90"
                 style={{
