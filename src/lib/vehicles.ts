@@ -51,6 +51,32 @@ export const getVehicleById = cache(async (vehicleId: string) => {
   }
 });
 
+// Vehículos visibles del tenant (para enlaces internos indexables en el home).
+// Filtra por show_in_web y excluye Vendido/Reservado, igual que el sitemap.
+export const getVisibleVehiclesByClientId = cache(
+  async (clientId: string | number) => {
+    try {
+      const { data, error } = await supabase
+        .from('vehicles')
+        .select(
+          `id, year, brand:brand_id(name), model:model_id(name), status:status_id(name, show_in_web)`
+        )
+        .eq('client_id', clientId);
+      if (error) throw error;
+      return (data || []).filter((v: any) => {
+        const st = Array.isArray(v.status) ? v.status[0] : v.status;
+        if (!st) return false;
+        const show =
+          typeof st.show_in_web === 'boolean' ? st.show_in_web : st.name === 'Publicado';
+        return show && st.name !== 'Vendido' && st.name !== 'Reservado';
+      });
+    } catch (error) {
+      console.error('Error fetching visible vehicles:', error);
+      return [];
+    }
+  }
+);
+
 // Sucursales del tenant, para el schema AutoDealer (NAP + geo + horarios).
 export const getDealershipsByClientId = cache(async (clientId: string | number) => {
   try {
