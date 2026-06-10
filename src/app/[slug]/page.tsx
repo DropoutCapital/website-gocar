@@ -1,27 +1,36 @@
-'use client';
+import { Metadata } from 'next';
+import { getClient } from '@/hooks/useClient';
+import { getCustomPageBySlug } from '@/lib/builder-pages';
+import CustomPageClient from './CustomPageClient';
 
-import { useParams } from 'next/navigation';
-import { notFound } from 'next/navigation';
-import BuilderPageWrapper from '@/components/builder2/BuilderPageWrapper';
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const client = await getClient();
+  if (!client?.id) return {};
 
-export default function CustomPage() {
-  const params = useParams();
-  const slug = typeof params.slug === 'string' ? params.slug : '';
+  const page = await getCustomPageBySlug(client.id, slug);
+  if (!page) return {}; // sin fila → hereda el template del layout (no forzar 404 acá)
 
-  if (!slug) {
-    notFound();
-    return null;
-  }
+  const title = page.seo_title || page.title;
+  const description = page.seo_description || undefined;
 
-  return (
-    <BuilderPageWrapper
-      slug={slug}
-      fallback={<NotFoundFallback />}
-    />
-  );
+  return {
+    title,
+    description,
+    alternates: { canonical: `/${slug}` },
+    openGraph: {
+      title,
+      description,
+      url: `/${slug}`,
+      type: 'website',
+    },
+  };
 }
 
-function NotFoundFallback() {
-  notFound();
-  return null;
+export default function CustomPage() {
+  return <CustomPageClient />;
 }

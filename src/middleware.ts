@@ -12,7 +12,15 @@ interface Client {
   seo?: {
     title?: string;
     description?: string;
+    keywords?: string[];
+    google_site_verification?: string;
+    // Redes sociales del negocio (Instagram/Facebook/...) → sameAs del AutoDealer.
+    social_links?: Record<string, string> | string[] | null;
   };
+  // Necesarios para los datos estructurados (AutoDealer / Offer) del sitio público.
+  contact?: { email?: string; phone?: string; address?: string };
+  location?: { lat?: number | string | null; lng?: number | string | null };
+  currency?: string;
 }
 
 const supabase = createClient(
@@ -63,7 +71,9 @@ export async function middleware(request: NextRequest) {
       // dominio propio que el cliente haya conectado (custom_domain).
       const { data } = (await supabase
         .from('clients')
-        .select('id, name, logo, favicon, seo, domain, custom_domain')
+        .select(
+          'id, name, logo, favicon, seo, domain, custom_domain, contact, location, currency'
+        )
         .or(`domain.eq.${hostname},custom_domain.eq.${hostname}`)
         .abortSignal(controller.signal)
         .maybeSingle()) as { data: Client | null };

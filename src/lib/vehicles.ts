@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { supabase } from './supabase';
 import { Lead, Vehicle } from '../utils/types';
 
@@ -22,7 +23,9 @@ export const getVehiclesByClientId = async (clientId: string) => {
   }
 };
 
-export const getVehicleById = async (vehicleId: string) => {
+// Cacheado por request (React cache): generateMetadata, los JSON-LD y el body
+// comparten un único fetch del vehículo.
+export const getVehicleById = cache(async (vehicleId: string) => {
   try {
     const { data, error } = await supabase
       .from('vehicles')
@@ -46,7 +49,24 @@ export const getVehicleById = async (vehicleId: string) => {
     console.error('Error fetching vehicle:', error);
     throw error;
   }
-};
+});
+
+// Sucursales del tenant, para el schema AutoDealer (NAP + geo + horarios).
+export const getDealershipsByClientId = cache(async (clientId: string | number) => {
+  try {
+    // select('*') es resiliente: no rompe si opening_hours aún no existe
+    // (la columna llega con la migración de SEO; antes simplemente no viene).
+    const { data, error } = await supabase
+      .from('dealerships')
+      .select('*')
+      .eq('client_id', clientId);
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching dealerships:', error);
+    return [];
+  }
+});
 
 export const incrementVehicleViews = async (vehicleId: number) => {
   try {

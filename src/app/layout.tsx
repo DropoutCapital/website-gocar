@@ -15,6 +15,9 @@ import { ToastContainer } from 'react-toastify';
 import DebugPropGuard from './DebugPropGuard';
 import { headers } from 'next/headers';
 import { getWebsiteConfig } from '@/lib/website-config';
+import { getDealershipsByClientId } from '@/lib/vehicles';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { buildDealerJsonLd, buildWebsiteJsonLd } from '@/lib/structured-data';
 
 const poppins = Poppins({
   weight: ['400', '500', '600', '700'],
@@ -51,9 +54,11 @@ export async function generateMetadata() {
           ],
         }
       : undefined,
-    verification: {
-      google: 'mM5DNzGoLlVxLaeEWPJsO2lRxjqYdwjGjTVqSGKhxQ8',
-    },
+    // Verificación de Search Console por tenant (cada automotora tiene su
+    // propia propiedad). Se configura desde el admin en clients.seo.
+    verification: client?.seo?.google_site_verification
+      ? { google: client.seo.google_site_verification }
+      : undefined,
     openGraph: {
       title,
       description,
@@ -82,12 +87,28 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const client = await getClient();
-  const websiteConfig = client?.id ? await getWebsiteConfig(client.id) : null;
+  const headersList = await headers();
+  const host = headersList.get('host') || 'localhost';
+  const baseUrl = `https://${host}`;
+
+  const [websiteConfig, dealerships] = await Promise.all([
+    client?.id ? getWebsiteConfig(client.id) : Promise.resolve(null),
+    client?.id ? getDealershipsByClientId(client.id) : Promise.resolve([]),
+  ]);
   const integrations = websiteConfig?.integrations ?? {
     google_reviews_enabled: false,
     pixel_id: '',
     gtm_id: '',
   };
+
+  // Datos estructurados a nivel de sitio (AutoDealer + WebSite). Google los
+  // dedupe entre páginas, así que van en el layout y no en cada page.
+  const orgJsonLd = client
+    ? [
+        buildDealerJsonLd(client, dealerships, baseUrl),
+        buildWebsiteJsonLd(client, baseUrl),
+      ]
+    : [];
 
   return (
     <html lang='es' suppressHydrationWarning>
@@ -112,6 +133,7 @@ export default async function RootLayout({
             `,
           }}
         />
+        {orgJsonLd.length > 0 && <JsonLd data={orgJsonLd} />}
       </head>
       <body className={`${poppins.variable} antialiased bg-white dark:bg-dark-bg`}>
         {process.env.NODE_ENV !== 'production' && <DebugPropGuard />}
