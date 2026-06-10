@@ -68,6 +68,7 @@ import { LogoCloud } from '@/components/builder2/sections/marketing/LogoCloud';
 import { LogoMarquee } from '@/components/builder2/sections/marketing/LogoMarquee';
 import { LogoGrid } from '@/components/builder2/sections/marketing/LogoGrid';
 import { PhotoGallery } from '@/components/builder2/sections/media/PhotoGallery';
+import { ImageCarousel } from '@/components/builder2/sections/media/ImageCarousel';
 import { TeamMembers } from '@/components/builder2/sections/team/TeamMembers';
 
 // Form imports
@@ -403,7 +404,7 @@ export const baseResolver: Record<string, any> = {
   VideoEmbed,
   HeroModerno, StatsModerno, TestimonialsModerno, CTAModerno, FooterModerno,
   HeroPremium, FeatureShowcase, TestimonialsPremium, GalleryPremium, CTAPremium,
-  BuilderNavbar, NavbarSimple, Footer, StatsCounter, PromoBanner, AwardsBadges, TrustBadges, LogoCloud, LogoMarquee, LogoGrid, PhotoGallery, TeamMembers,
+  BuilderNavbar, NavbarSimple, Footer, StatsCounter, PromoBanner, AwardsBadges, TrustBadges, LogoCloud, LogoMarquee, LogoGrid, PhotoGallery, ImageCarousel, TeamMembers,
   FinancingFormEmbed, ConsignmentsFormEmbed, BuyDirectFormEmbed, WeSearchFormEmbed, ContactFormEmbed, AboutContentEmbed,
   div: Unknown, p: Unknown, span: Unknown, img: Unknown, Unknown,
 };
