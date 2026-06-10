@@ -23,6 +23,7 @@ interface BuilderNavbarProps {
   showLogo?: boolean;
   sticky?: boolean;
   transparentOnTop?: boolean;
+  fullWidth?: boolean;
 }
 
 /** Sun icon */
@@ -79,6 +80,7 @@ export const BuilderNavbar = ({
   showLogo = true,
   sticky = true,
   transparentOnTop = true,
+  fullWidth = false,
 }: BuilderNavbarProps) => {
   const { connectors } = useNode();
   const { client } = useClientStore();
@@ -163,7 +165,7 @@ export const BuilderNavbar = ({
       }}
       className="w-full transition-all duration-300"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className={`${fullWidth ? 'max-w-full' : 'max-w-7xl'} mx-auto px-4 sm:px-6 lg:px-8`}>
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -189,7 +191,7 @@ export const BuilderNavbar = ({
               <Link
                 key={i}
                 href={link.url}
-                className="px-3 py-2 text-sm font-medium rounded-md transition-colors hover:opacity-80"
+                className="px-3 py-2 text-sm font-medium rounded-md transition-colors hover:opacity-80 whitespace-nowrap"
                 style={{
                   color: isActiveLink(link.url) ? primaryColor : effectiveText,
                   fontWeight: isActiveLink(link.url) ? 600 : 500,
@@ -340,6 +342,7 @@ BuilderNavbar.craft = {
     showLogo: true,
     sticky: true,
     transparentOnTop: true,
+    fullWidth: false,
   },
   rules: {
     canDrag: () => true,
