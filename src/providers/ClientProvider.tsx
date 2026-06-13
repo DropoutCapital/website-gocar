@@ -26,10 +26,14 @@ export function ClientProvider({ children }: { children: React.ReactNode }) {
     async function loadClientAndVehicles() {
       const domain = window.location.host;
 
+      // Match either the GoAuto subdomain (domain) or a client-connected
+      // custom domain (custom_domain). Mirrors middleware.ts tenant resolution;
+      // without the custom_domain branch, sites on a propio domain 406 here and
+      // the loading spinner never clears.
       const { data: clientData, error: clientError } = await supabase
         .from('clients')
         .select(`*, dealerships(*), client_website_config(${WEBSITE_CONFIG_LIGHT_COLS})`)
-        .eq('domain', domain)
+        .or(`domain.eq.${domain},custom_domain.eq.${domain}`)
         .single();
 
       if (clientData) {
