@@ -9,6 +9,7 @@ import useClientStore from '@/store/useClientStore';
 import { Dealership } from '@/utils/types';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/i18n/hooks/useTranslation';
+import OpeningHours from './OpeningHours';
 
 interface HowToArriveProps {
   title?: string;
@@ -303,6 +304,23 @@ export default function HowToArrive({
                           <a href={`mailto:${selectedDealership.email}`} className={!valueColor ? 'text-gray-900 dark:text-white text-sm hover:text-primary transition-colors truncate block' : 'text-sm transition-colors truncate block'} style={valueColor ? { color: valueColor } : undefined}>
                             {selectedDealership.email}
                           </a>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Horario de atención */}
+                    {selectedDealership.opening_hours && (
+                      <div className="flex gap-3">
+                        <Icon icon="mdi:clock-outline" className="text-xl text-primary flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0 flex-1">
+                          <p className={!labelColor ? 'text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1' : 'text-xs uppercase tracking-wide mb-1'} style={labelColor ? { color: labelColor } : undefined}>
+                            {t('home.howToArrive.hours')}
+                          </p>
+                          <OpeningHours
+                            hours={selectedDealership.opening_hours}
+                            labelColor={labelColor}
+                            valueColor={valueColor}
+                          />
                         </div>
                       </div>
                     )}

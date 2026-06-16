@@ -6,6 +6,12 @@ export interface User {
   email: string;
   rol: string;
 }
+export interface DayHours {
+  open?: string;
+  close?: string;
+  closed?: boolean;
+}
+
 export interface Dealership {
   id: string;
   client_id: string;
@@ -13,6 +19,8 @@ export interface Dealership {
   phone: string;
   email: string;
   location: Location;
+  /** { monday: { open, close } | { closed: true }, ... } — claves de día en inglés */
+  opening_hours?: Record<string, DayHours> | null;
   created_at: string;
   updated_at: string;
 }
