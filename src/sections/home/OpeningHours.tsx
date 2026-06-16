@@ -72,9 +72,9 @@ export default function OpeningHours({ hours, labelColor, valueColor }: OpeningH
   return (
     <div className="space-y-0.5">
       {groups.map((g, i) => (
-        <div key={i} className="flex justify-between gap-3 text-sm">
+        <div key={i} className="flex gap-2 text-sm">
           <span
-            className={!labelColor ? 'text-gray-700 dark:text-gray-300' : ''}
+            className={!labelColor ? 'w-20 flex-shrink-0 text-gray-700 dark:text-gray-300' : 'w-20 flex-shrink-0'}
             style={labelColor ? { color: labelColor } : undefined}
           >
             {g.from === g.to ? g.from : `${g.from} – ${g.to}`}
