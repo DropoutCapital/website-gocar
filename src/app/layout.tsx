@@ -18,6 +18,7 @@ import { getWebsiteConfig } from '@/lib/website-config';
 import { getDealershipsByClientId } from '@/lib/vehicles';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildDealerJsonLd, buildWebsiteJsonLd } from '@/lib/structured-data';
+import { BUILDER_FONTS_HREF } from '@/lib/builder-fonts';
 
 const poppins = Poppins({
   weight: ['400', '500', '600', '700'],
@@ -133,6 +134,12 @@ export default async function RootLayout({
             `,
           }}
         />
+        {/* Fuentes curadas del builder (selector inline de tipo de fuente).
+            Un solo request combinado; el navegador descarga cada binario sólo
+            cuando una fuente se usa realmente. Lista en @/lib/builder-fonts. */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="stylesheet" href={BUILDER_FONTS_HREF} />
         {orgJsonLd.length > 0 && <JsonLd data={orgJsonLd} />}
       </head>
       <body className={`${poppins.variable} antialiased bg-white dark:bg-dark-bg`}>
