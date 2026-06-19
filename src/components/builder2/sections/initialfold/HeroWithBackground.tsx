@@ -139,9 +139,9 @@ export const HeroWithBackground = ({
       <div style={overlayStyle} className='absolute inset-0 z-0' />
 
       {/* Content */}
-      <div className='w-full z-10 relative'>
+      <div className='container mx-auto px-4 z-10 relative'>
         <div
-          className={`w-full text-${textAlignment}`}
+          className={`max-w-3xl mx-auto text-${textAlignment}`}
           style={{ margin: textAlignment === 'center' ? '0 auto' : '0' }}
         >
           {!isBlankHtml(title) && (
