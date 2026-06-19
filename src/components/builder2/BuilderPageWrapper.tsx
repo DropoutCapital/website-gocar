@@ -122,5 +122,16 @@ export default function BuilderPageWrapper({ slug, fallback }: Props) {
   const data = theme === 'dark' ? (cached.dark || cached.light) : (cached.light || cached.dark);
   if (!data) return <>{fallback}</>;
 
-  return <BuilderRenderer data={data} themeKey={`${theme}-${currentLanguage}`} fallback={fallback} />;
+  // En páginas no-home el navbar sticky horneado se elimina (ver getPageBuilderData)
+  // y lo reemplaza el Navbar fijo del layout (overlay, no ocupa flujo). Reponemos
+  // los ~64px (h-16) que ocupaba el navbar sticky para que la primera sección no
+  // quede tapada. La home conserva su navbar inline, así que no lleva padding.
+  if (slug === 'home') {
+    return <BuilderRenderer data={data} themeKey={`${theme}-${currentLanguage}`} fallback={fallback} />;
+  }
+  return (
+    <div className="pt-16">
+      <BuilderRenderer data={data} themeKey={`${theme}-${currentLanguage}`} fallback={fallback} />
+    </div>
+  );
 }

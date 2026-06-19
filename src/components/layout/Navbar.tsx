@@ -62,13 +62,101 @@ interface ExtractedNav {
   cta: { name: string; href: string } | null;
 }
 
+// Resuelve el blob comprimido de una página (slug) desde el envelope (v3/v2/legacy).
+function resolveCompressedBlob(structure: any, slug: string, theme: 'light' | 'dark'): string | null {
+  const pick = (p: any): string | null =>
+    p ? (theme === 'dark' ? (p.dark || p.light) : (p.light || p.dark)) || null : null;
+  if (typeof structure === 'object' && structure !== null) {
+    const env: any = structure;
+    if (env.v === 3) return pick(env.pages?.[slug]);
+    if (env.v === 2) return slug === 'home' ? (env[theme] || env.light || env.dark || null) : null;
+    return null;
+  }
+  const raw = String(structure);
+  let env: any = null;
+  try { env = JSON.parse(raw); } catch { env = null; }
+  if (env?.v === 3) return pick(env.pages?.[slug]);
+  if (env?.v === 2) return slug === 'home' ? (env[theme] || env.light || env.dark || null) : null;
+  // legacy single-theme: el blob es la home directamente.
+  return slug === 'home' ? raw : null;
+}
+
+// Slugs de página de un envelope v3 (vacío para v2/legacy, que solo tienen home).
+function getEnvelopePageSlugs(structure: any): string[] {
+  let env: any = structure;
+  if (typeof structure !== 'object' || structure === null) {
+    try { env = JSON.parse(String(structure)); } catch { return []; }
+  }
+  return env?.v === 3 && env.pages ? Object.keys(env.pages) : [];
+}
+
+// Descomprime un blob a su mapa de nodos Craft.js (o null).
+function decodeNavNodes(compressed: string): Record<string, any> | null {
+  try {
+    let parsed: any = lz.decompress(lz.decodeBase64(compressed));
+    while (typeof parsed === 'string') {
+      try { parsed = JSON.parse(parsed); } catch { break; }
+    }
+    if (!parsed || typeof parsed !== 'object') return null;
+    return parsed.nodes && typeof parsed.nodes === 'object' ? parsed.nodes : parsed;
+  } catch {
+    return null;
+  }
+}
+
+// Busca el nodo navbar en un mapa de nodos. Prefiere navbars dedicados
+// (BuilderNavbar/NavbarSimple); HeroMega (megacomponente navbar+hero) como fallback.
+function findNavNode(nodes: Record<string, any>): { id: string; node: any } | null {
+  let hero: { id: string; node: any } | null = null;
+  for (const [id, node] of Object.entries(nodes) as [string, any][]) {
+    const rn = node?.type?.resolvedName;
+    if (rn === 'BuilderNavbar' || rn === 'NavbarSimple') return { id, node };
+    if (rn === 'HeroMega' && !hero) hero = { id, node };
+  }
+  return hero;
+}
+
+// Construye {links, cta} desde un nodo navbar, aplicando traducciones es→en.
+// Devuelve null si el navbar no tiene links utilizables (para seguir al fallback).
+function navFromNode(
+  navNodeId: string,
+  navNode: any,
+  pageSlug: string,
+  translations: Record<string, string> | null
+): ExtractedNav | null {
+  const props = navNode.props || {};
+  const rawLinks: any[] = Array.isArray(props.links) ? props.links : [];
+  const links = rawLinks
+    .filter((l) => l && typeof l.url === 'string' && l.url && typeof l.text === 'string')
+    .map((l, i) => {
+      let text = l.text as string;
+      const key = `${pageSlug}::${navNodeId}::link_${i}`;
+      if (translations && key in translations && translations[key]) text = translations[key];
+      return { name: text, href: l.url as string, icon: iconForUrl(l.url) };
+    });
+  if (links.length === 0) return null;
+
+  // El CTA solo existe en BuilderNavbar y HeroMega (NavbarSimple no tiene).
+  let cta: { name: string; href: string } | null = null;
+  const rn = navNode.type?.resolvedName;
+  if ((rn === 'BuilderNavbar' || rn === 'HeroMega') && props.ctaUrl && props.ctaText) {
+    let ctaText = props.ctaText as string;
+    const ctaKey = `${pageSlug}::${navNodeId}::ctaText`;
+    if (translations && ctaKey in translations && translations[ctaKey]) ctaText = translations[ctaKey];
+    cta = { name: ctaText, href: props.ctaUrl as string };
+  }
+  return { links, cta };
+}
+
 /**
- * Extrae el navbar que el cliente configuró en el builder (links + CTA) leyendo
- * la página `home` guardada en elements_structure. Se usa SOLO cuando el builder
- * está activo (en /vehicles y /embed, donde el navbar real del builder no se
- * renderiza). Devuelve null si el builder está apagado, la estructura aún no se
- * hidrató, o no se encuentra un nodo navbar → el caller cae al navbar por defecto
- * (mismo comportamiento de hoy, sin regresión para clientes tradicionales).
+ * Extrae el navbar que el cliente configuró en el builder (links + CTA). Lo usa el
+ * Navbar del layout para mostrar el MISMO navbar configurado en todas las páginas
+ * (fuente única). Estrategia, validada contra los tenants reales (cero pérdida de
+ * links — ver scripts/verify-navbars.cjs):
+ *   1. Navbar de la HOME (caso normal: BuilderNavbar/NavbarSimple/HeroMega).
+ *   2. Fallback: si la home no tiene navbar con links (tenants legacy, o que lo
+ *      configuraron en otra página), usar el primer navbar con links de otra página.
+ *   3. null → el caller cae al navbar por defecto (sin regresión).
  *
  * Descompresión auto-contenida con lzutf8 a propósito: importar getPageBuilderData
  * arrastraría BuilderRenderer (los ~60 componentes del builder) al bundle de /vehicles.
@@ -82,66 +170,30 @@ function extractBuilderNav(
     const config = client?.client_website_config;
     const cfg = Array.isArray(config) ? config[0] : config;
     if (!cfg?.is_enabled || !cfg?.elements_structure) return null;
-
-    // Resolver el blob comprimido de la home desde el envelope (v3/v2/legacy).
     const structure = cfg.elements_structure;
-    let compressed: string | null = null;
-    if (typeof structure === 'object' && structure !== null) {
-      const env: any = structure;
-      if (env.v === 3) compressed = env.pages?.home?.[theme] || env.pages?.home?.light || env.pages?.home?.dark;
-      else if (env.v === 2) compressed = env[theme] || env.light || env.dark;
-    } else {
-      const raw = String(structure);
-      let env: any = null;
-      try { env = JSON.parse(raw); } catch { env = null; }
-      if (env?.v === 3) compressed = env.pages?.home?.[theme] || env.pages?.home?.light || env.pages?.home?.dark;
-      else if (env?.v === 2) compressed = env[theme] || env.light || env.dark;
-      else compressed = raw; // legacy single-theme (la home es el blob directo)
-    }
-    if (!compressed) return null;
 
-    let parsed: any = lz.decompress(lz.decodeBase64(compressed));
-    while (typeof parsed === 'string') {
-      try { parsed = JSON.parse(parsed); } catch { break; }
-    }
-    if (!parsed || typeof parsed !== 'object') return null;
-
-    const nodes = parsed.nodes && typeof parsed.nodes === 'object' ? parsed.nodes : parsed;
-
-    // Buscar el nodo navbar (BuilderNavbar o NavbarSimple).
-    let navNodeId: string | null = null;
-    let navNode: any = null;
-    for (const [id, node] of Object.entries(nodes) as [string, any][]) {
-      const rn = node?.type?.resolvedName;
-      if (rn === 'BuilderNavbar' || rn === 'NavbarSimple') {
-        navNodeId = id;
-        navNode = node;
-        break;
-      }
-    }
-    if (!navNode) return null;
-
-    const props = navNode.props || {};
-    const rawLinks: any[] = Array.isArray(props.links) ? props.links : [];
-    const links = rawLinks
-      .filter((l) => l && typeof l.url === 'string' && l.url && typeof l.text === 'string')
-      .map((l, i) => {
-        let text = l.text as string;
-        const key = `home::${navNodeId}::link_${i}`;
-        if (translations && key in translations && translations[key]) text = translations[key];
-        return { name: text, href: l.url as string, icon: iconForUrl(l.url) };
-      });
-
-    // El CTA solo existe en BuilderNavbar (NavbarSimple no tiene).
-    let cta: { name: string; href: string } | null = null;
-    if (navNode.type?.resolvedName === 'BuilderNavbar' && props.ctaUrl && props.ctaText) {
-      let ctaText = props.ctaText as string;
-      const ctaKey = `home::${navNodeId}::ctaText`;
-      if (translations && ctaKey in translations && translations[ctaKey]) ctaText = translations[ctaKey];
-      cta = { name: ctaText, href: props.ctaUrl as string };
+    // 1) Navbar configurado en la HOME (caso normal).
+    const homeBlob = resolveCompressedBlob(structure, 'home', theme);
+    if (homeBlob) {
+      const nodes = decodeNavNodes(homeBlob);
+      const nav = nodes ? findNavNode(nodes) : null;
+      const result = nav ? navFromNode(nav.id, nav.node, 'home', translations) : null;
+      if (result) return result;
     }
 
-    return { links, cta };
+    // 2) Fallback cross-page: la home no tiene navbar con links → buscar en el resto
+    //    de páginas (solo envelopes v3). Evita perder links ya configurados.
+    for (const slug of getEnvelopePageSlugs(structure)) {
+      if (slug === 'home') continue;
+      const blob = resolveCompressedBlob(structure, slug, theme);
+      if (!blob) continue;
+      const nodes = decodeNavNodes(blob);
+      const nav = nodes ? findNavNode(nodes) : null;
+      const result = nav ? navFromNode(nav.id, nav.node, slug, translations) : null;
+      if (result) return result;
+    }
+
+    return null;
   } catch {
     return null;
   }
