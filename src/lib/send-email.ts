@@ -301,6 +301,8 @@ export function createVehicleLeadEmailTemplate({
 
   const leadTypeName = leadTypeMap[leadType] || leadType;
 
+  // (Para formularios configurables desde el builder, ver createDynamicLeadEmailTemplate al final.)
+
   // Formatear los valores del vehículo para mejor visualización
   const formattedVehicleDetails = {
     brand: vehicleDetails.brand || 'No especificado',
@@ -387,7 +389,83 @@ export function createVehicleLeadEmailTemplate({
         <!-- Footer -->
         <div style="background-color: #f1f1f1; padding: 15px; text-align: center; font-size: 13px; color: #666; border-top: 1px solid #ddd; margin-top: 32px; border-radius: 0 0 10px 10px;">
           <p style="margin: 0;">
-            Este es un email automático generado por <a href="https://goauto.cl" style="color: #51bde5; text-decoration: none;">GoAuto</a>. 
+            Este es un email automático generado por <a href="https://goauto.cl" style="color: #51bde5; text-decoration: none;">GoAuto</a>.
+            <br>Por favor no responda a este mensaje.
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+/**
+ * Escapa HTML para evitar inyección al volcar valores arbitrarios del usuario en el email.
+ */
+function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Plantilla HTML genérica para formularios configurables desde el builder.
+ * Recibe una lista de campos { label, value } y los renderiza como tabla.
+ * Los campos con isHeading se muestran como subtítulo de sección.
+ * Todos los valores se escapan (anti-XSS).
+ */
+export function createDynamicLeadEmailTemplate({
+  leadTypeName = 'Nueva solicitud',
+  fields,
+}: {
+  leadTypeName?: string;
+  fields: { label: string; value?: string; isHeading?: boolean }[];
+}): string {
+  const rows = (fields || [])
+    .map((f) => {
+      if (f.isHeading) {
+        return `<tr><td colspan="2" style="padding: 20px 0 8px 0;"><h2 style="color: #222; font-size: 16px; margin: 0; letter-spacing: 1px;">${escapeHtml(
+          f.label
+        )}</h2></td></tr>`;
+      }
+      const rawValue = (f.value ?? '').toString().trim();
+      const value = rawValue ? escapeHtml(rawValue).replace(/\n/g, '<br>') : 'No especificado';
+      return `<tr><td style="padding: 7px 0; width: 200px; vertical-align: top;"><strong>${escapeHtml(
+        f.label
+      )}:</strong></td><td style="padding: 7px 0;">${value}</td></tr>`;
+    })
+    .join('');
+
+  return `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${escapeHtml(leadTypeName)}</title>
+    </head>
+    <body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; padding: 20px; color: #333; background: #f8f9fa;">
+      <div style="background: #fff; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.08); padding: 0 0 24px 0;">
+        <div style="background-color: #51bde5; padding: 24px 24px 20px 24px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 26px;">${escapeHtml(leadTypeName)}</h1>
+        </div>
+        <div style="padding: 24px 24px 0 24px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 15px;">
+            ${rows}
+          </table>
+        </div>
+        <div style="margin: 30px 0 0 0; text-align: center;">
+          <a href="https://portal.goauto.cl/leads"
+             style="background-color: #51bde5; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
+            Ver detalles en el Portal
+          </a>
+        </div>
+        <div style="background-color: #f1f1f1; padding: 15px; text-align: center; font-size: 13px; color: #666; border-top: 1px solid #ddd; margin-top: 32px; border-radius: 0 0 10px 10px;">
+          <p style="margin: 0;">
+            Este es un email automático generado por <a href="https://goauto.cl" style="color: #51bde5; text-decoration: none;">GoAuto</a>.
             <br>Por favor no responda a este mensaje.
           </p>
         </div>
