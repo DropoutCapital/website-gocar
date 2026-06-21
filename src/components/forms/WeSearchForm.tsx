@@ -731,7 +731,9 @@ const DynamicWeSearchForm = ({
         recordFields.push({ label: f.label || '', value: display });
       });
 
-      // 1. Customer (best-effort, solo si hay email — respeta el guard de initializeCustomer)
+      // 1. Customer. Con email usamos initializeCustomer (dedup por email). Si no hay email
+      //    pero hay algún dato de contacto, igual creamos el customer para que el lead aparezca
+      //    en el CRM (la lista de leads oculta los que tienen customer_id null).
       let customerId: string | undefined;
       if (email) {
         try {
@@ -745,7 +747,28 @@ const DynamicWeSearchForm = ({
           });
           customerId = customer?.id;
         } catch (err) {
-          // Si falla la creación del customer, igual registramos el lead y enviamos el email
+          // Si falla, intentamos el insert directo abajo
+        }
+      }
+      if (!customerId && (firstName || lastName || phone || rut || email)) {
+        try {
+          const { data: newCustomer } = await supabase
+            .from('customers')
+            .insert([
+              {
+                first_name: firstName || null,
+                last_name: lastName || null,
+                email: email || null,
+                phone: phone || null,
+                rut: rut || null,
+                client_id: client.id,
+              },
+            ])
+            .select('id')
+            .single();
+          customerId = newCustomer?.id;
+        } catch (err) {
+          // Continuamos: el lead y el email igual se registran/envían
         }
       }
 
