@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { headers } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
+import { getHiddenSystemPages } from '@/lib/page-builder-data';
 
 export default async function sitemap(): Promise<MetadataRoute['sitemap']> {
   const headersList = await headers();
@@ -78,5 +79,17 @@ export default async function sitemap(): Promise<MetadataRoute['sitemap']> {
     })
   );
 
-  return [...staticPages, ...vehiclePages, ...customPagePages];
+  // Excluir del sitemap las páginas de sistema que el cliente eliminó en el builder.
+  const { data: cfg } = await supabase
+    .from('client_website_config')
+    .select('elements_structure')
+    .eq('client_id', client.id)
+    .maybeSingle();
+  const hiddenSlugs = getHiddenSystemPages(cfg);
+  const visibleStatic = (staticPages || []).filter((p: any) => {
+    const slug = String(p.url).replace(baseUrl, '').replace(/^\//, '');
+    return !hiddenSlugs.includes(slug);
+  });
+
+  return [...visibleStatic, ...vehiclePages, ...customPagePages];
 }

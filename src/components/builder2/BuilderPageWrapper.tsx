@@ -1,10 +1,11 @@
 'use client';
 
 import { useRef, useMemo } from 'react';
+import { notFound } from 'next/navigation';
 import useClientStore from '@/store/useClientStore';
 import useThemeStore from '@/store/useThemeStore';
 import { useTranslation } from '@/i18n/hooks/useTranslation';
-import { getPageBuilderData } from '@/lib/page-builder-data';
+import { getPageBuilderData, getHiddenSystemPages } from '@/lib/page-builder-data';
 import { useBuilderReady } from '@/hooks/useBuilderReady';
 import BuilderRenderer from '@/app/BuilderRenderer';
 
@@ -65,6 +66,9 @@ export default function BuilderPageWrapper({ slug, fallback }: Props) {
     } catch { return null; }
   }, [needsTranslation, cfg?.translations]);
 
+  // Páginas de sistema que el cliente eliminó desde el builder
+  const hiddenSystemPages = useMemo(() => getHiddenSystemPages(cfg), [cfg]);
+
   // Pick the right cache
   const cache = needsTranslation ? pageCacheTranslated : pageCacheDefault;
 
@@ -104,6 +108,12 @@ export default function BuilderPageWrapper({ slug, fallback }: Props) {
   const isStructurePending = cfg?.is_enabled && !cfg?.elements_structure;
   if (isStructurePending) {
     return builderStatus === 'fallback' ? <>{fallback}</> : <BuilderLoading />;
+  }
+
+  // Página de sistema eliminada por el cliente → 404 real (la ruta física existe
+  // igual, así que sin este check mostraría el fallback tradicional). 'home' nunca.
+  if (cfg?.is_enabled && slug !== 'home' && hiddenSystemPages.includes(slug)) {
+    notFound();
   }
 
   const cached = cache.get(slug);
