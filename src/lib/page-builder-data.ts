@@ -210,3 +210,26 @@ export function getPageBuilderData(
 
   return null;
 }
+
+/**
+ * Lista de páginas de SISTEMA que el cliente eligió eliminar/ocultar desde el builder.
+ * Se persiste en el envelope v3 (`hiddenSystemPages`). 'home' nunca se incluye.
+ */
+export function getHiddenSystemPages(config: any): string[] {
+  if (!config?.elements_structure) return [];
+  const structure = config.elements_structure;
+  let envelope: any = null;
+  if (typeof structure === 'object' && structure !== null) {
+    envelope = structure;
+  } else {
+    try {
+      envelope = JSON.parse(String(structure));
+    } catch {
+      return [];
+    }
+  }
+  const hidden = envelope?.hiddenSystemPages;
+  return Array.isArray(hidden)
+    ? hidden.filter((s: any) => typeof s === 'string' && s !== 'home')
+    : [];
+}
