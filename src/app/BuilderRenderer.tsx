@@ -101,6 +101,7 @@ interface FormEmbedProps {
   contactPhone?: string;
   showEmail?: boolean;
   showPhone?: boolean;
+  formFields?: any[];
 }
 
 function deriveColors(bgColor?: string) {
@@ -253,7 +254,7 @@ const BuyDirectFormEmbed = ({ bgColor = '#ffffff', textColor = '#111827', accent
 };
 
 // ── We Search For You ──
-const WeSearchFormEmbed = ({ bgColor = '#ffffff', textColor = '#111827', accentColor = '#3b82f6', title, subtitle }: FormEmbedProps) => {
+const WeSearchFormEmbed = ({ bgColor = '#ffffff', textColor = '#111827', accentColor = '#3b82f6', title, subtitle, formFields }: FormEmbedProps) => {
   const { connectors } = useNode();
   const { cardBg, cardBorder, infoBg, subtextColor } = deriveColors(bgColor);
   return (
@@ -262,7 +263,7 @@ const WeSearchFormEmbed = ({ bgColor = '#ffffff', textColor = '#111827', accentC
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
           <div className="rounded-xl shadow-lg p-8 border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-            <WeSearchForm embedded bgColor={cardBg} textColor={textColor} accentColor={accentColor} />
+            <WeSearchForm embedded bgColor={cardBg} textColor={textColor} accentColor={accentColor} formFields={formFields} />
           </div>
           <div className="rounded-xl p-8 border" style={{ backgroundColor: infoBg, borderColor: cardBorder }}>
             <h2 className="text-2xl font-bold mb-6" style={{ color: textColor }}>{'\u00bfC\u00f3mo funciona?'}</h2>

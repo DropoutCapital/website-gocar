@@ -14,9 +14,23 @@ import useClientStore from '@/store/useClientStore';
 import useCustomerStore from '@/store/useCustomerStore';
 import { supabase } from '@/lib/supabase';
 import { Brand, Model, LeadTypes } from '@/utils/types';
-import { sendEmail, createVehicleLeadEmailTemplate } from '@/lib/send-email';
+import {
+  sendEmail,
+  createVehicleLeadEmailTemplate,
+  createDynamicLeadEmailTemplate,
+} from '@/lib/send-email';
 import SuccessModal from '@/components/ui/SuccessModal';
 import { useTranslation } from '@/i18n/hooks/useTranslation';
+
+// Campo configurable desde el builder (mismo shape en goautos-admin)
+export interface DynamicFormField {
+  label?: string;
+  // 'text' | 'number' | 'email' | 'tel' | 'name' | 'lastname' | 'rut'
+  // | 'select' | 'textarea' | 'brand' | 'model' | 'heading'
+  fieldType?: string;
+  options?: string; // opciones separadas por coma (solo para fieldType 'select')
+  required?: boolean;
+}
 
 interface FormStyleProps {
   title?: string;
@@ -25,9 +39,10 @@ interface FormStyleProps {
   textColor?: string;
   accentColor?: string;
   embedded?: boolean;
+  formFields?: DynamicFormField[];
 }
 
-const WeSearchForm = ({ title, subtitle, bgColor, textColor, accentColor, embedded = false }: FormStyleProps = {}) => {
+const LegacyWeSearchForm = ({ title, subtitle, bgColor, textColor, accentColor, embedded = false }: FormStyleProps = {}) => {
   // When builder passes bgColor, use inline styles. Otherwise use default Tailwind classes.
   const hasBuilderStyles = !!bgColor;
   const isDarkBg = bgColor && (bgColor.startsWith('#0') || bgColor.startsWith('#1') || bgColor.startsWith('#2'));
@@ -392,7 +407,7 @@ const WeSearchForm = ({ title, subtitle, bgColor, textColor, accentColor, embedd
               inputProps={{ classNames: inputClassNames }}
             >
               {brands.map((brand) => (
-                <AutocompleteItem key={brand.id} value={brand.id}>
+                <AutocompleteItem key={brand.id}>
                   {brand.name}
                 </AutocompleteItem>
               ))}
@@ -411,10 +426,7 @@ const WeSearchForm = ({ title, subtitle, bgColor, textColor, accentColor, embedd
               inputProps={{ classNames: inputClassNames }}
             >
               {models.map((model) => (
-                <AutocompleteItem
-                  key={model.id.toString()}
-                  value={model.id.toString()}
-                >
+                <AutocompleteItem key={model.id.toString()}>
                   {model.name}
                 </AutocompleteItem>
               ))}
@@ -565,6 +577,402 @@ const WeSearchForm = ({ title, subtitle, bgColor, textColor, accentColor, embedd
       />
     </div>
   );
+};
+
+// ──────────────────────────────────────────────────────────────────────────
+// Formulario DINÁMICO: se arma desde `formFields` configurados en el builder.
+// Solo se usa cuando el nodo trae formFields; si no, se usa el Legacy de arriba.
+// ──────────────────────────────────────────────────────────────────────────
+
+const FIELD_KEY = (i: number) => `f_${i}`;
+
+const DynamicWeSearchForm = ({
+  title,
+  subtitle,
+  bgColor,
+  textColor,
+  accentColor,
+  embedded = false,
+  formFields = [],
+}: FormStyleProps) => {
+  const hasBuilderStyles = !!bgColor;
+  const isDarkBg =
+    bgColor && (bgColor.startsWith('#0') || bgColor.startsWith('#1') || bgColor.startsWith('#2'));
+  const cardStyle = hasBuilderStyles
+    ? { backgroundColor: bgColor, borderColor: textColor ? `${textColor}15` : undefined }
+    : undefined;
+  const cardClass = hasBuilderStyles
+    ? 'rounded-xl shadow-lg p-8 border'
+    : 'bg-white dark:bg-dark-card rounded-xl shadow-lg p-8 border border-gray-200 dark:border-dark-border';
+  const titleStyle = hasBuilderStyles ? { color: textColor } : undefined;
+  const titleClass = hasBuilderStyles
+    ? 'text-3xl sm:text-4xl font-extrabold'
+    : 'text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white';
+  const subtitleStyle = hasBuilderStyles ? { color: textColor, opacity: 0.6 } : undefined;
+  const subtitleClass = hasBuilderStyles
+    ? 'mt-4 text-lg'
+    : 'mt-4 text-lg text-gray-500 dark:text-gray-400';
+  const headingStyle = hasBuilderStyles ? { color: textColor } : undefined;
+
+  const inputClassNames =
+    hasBuilderStyles || embedded
+      ? {
+          label: isDarkBg ? '!text-white/60' : '!text-black/50',
+          input: isDarkBg ? '!text-white !placeholder-white/40' : '!text-gray-900',
+          inputWrapper: isDarkBg
+            ? '!bg-[#262626] !border-[#3a3a3a] hover:!border-[#4a4a4a] !rounded-lg'
+            : '!bg-white !border-[#d1d5db] hover:!border-gray-400 !rounded-lg',
+        }
+      : undefined;
+  const buttonStyle =
+    (hasBuilderStyles || embedded) && accentColor ? { backgroundColor: accentColor } : undefined;
+
+  const { client } = useClientStore();
+  const { initializeCustomer } = useCustomerStore();
+  const { t } = useTranslation();
+  const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
+  const [selectedBrandId, setSelectedBrandId] = useState('');
+
+  const hasBrandField = formFields.some((f) => f.fieldType === 'brand');
+
+  useEffect(() => {
+    if (!hasBrandField) return;
+    const fetchBrands = async () => {
+      const { data } = await supabase.from('brands').select('*');
+      if (data) setBrands(data);
+    };
+    fetchBrands();
+  }, [hasBrandField]);
+
+  useEffect(() => {
+    if (selectedBrandId) {
+      const fetchModels = async () => {
+        const { data } = await supabase
+          .from('models')
+          .select('*')
+          .eq('brand_id', selectedBrandId);
+        if (data) setModels(data);
+      };
+      fetchModels();
+    } else {
+      setModels([]);
+    }
+  }, [selectedBrandId]);
+
+  const setVal = (i: number, v: string) =>
+    setValues((prev) => ({ ...prev, [FIELD_KEY(i)]: v }));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!client?.id) {
+      alert('❌ Error: No se pudo identificar la automotora. Por favor, recarga la página.');
+      return;
+    }
+
+    // Validar campos requeridos por configuración
+    for (let i = 0; i < formFields.length; i++) {
+      const f = formFields[i];
+      if (f.fieldType === 'heading') continue;
+      if (f.required && !(values[FIELD_KEY(i)] || '').trim()) {
+        alert(`❌ Por favor completa el campo obligatorio: ${f.label || ''}`);
+        return;
+      }
+    }
+
+    try {
+      setLoading(true);
+
+      let email = '';
+      let phone = '';
+      let firstName = '';
+      let lastName = '';
+      let rut = '';
+      let brandId = '';
+      let modelId = '';
+      const recordFields: { label: string; value?: string; isHeading?: boolean }[] = [];
+
+      formFields.forEach((f, i) => {
+        const raw = (values[FIELD_KEY(i)] || '').trim();
+        if (f.fieldType === 'heading') {
+          recordFields.push({ label: f.label || '', isHeading: true });
+          return;
+        }
+        let display = raw;
+        switch (f.fieldType) {
+          case 'email':
+            email = raw;
+            break;
+          case 'tel':
+            phone = raw;
+            break;
+          case 'name':
+            firstName = raw;
+            break;
+          case 'lastname':
+            lastName = raw;
+            break;
+          case 'rut':
+            rut = raw;
+            break;
+          case 'brand':
+            brandId = raw;
+            display = brands.find((b) => b.id === raw)?.name || raw;
+            break;
+          case 'model':
+            modelId = raw;
+            display = models.find((m) => m.id.toString() === raw)?.name || raw;
+            break;
+        }
+        recordFields.push({ label: f.label || '', value: display });
+      });
+
+      // 1. Customer (best-effort, solo si hay email — respeta el guard de initializeCustomer)
+      let customerId: string | undefined;
+      if (email) {
+        try {
+          const customer = await initializeCustomer({
+            first_name: firstName || undefined,
+            last_name: lastName || undefined,
+            email,
+            phone: phone || undefined,
+            rut: rut || undefined,
+            client_id: client.id,
+          });
+          customerId = customer?.id;
+        } catch (err) {
+          // Si falla la creación del customer, igual registramos el lead y enviamos el email
+        }
+      }
+
+      // 2. Lead — guardamos las respuestas en search_params.custom_fields (forma nueva,
+      //    aditiva: no pisa la forma fija que lee el CRM para otros tipos de lead)
+      const leadData: any = {
+        client_id: client.id,
+        customer_id: customerId ?? null,
+        brand_id: brandId || null,
+        model_id: modelId ? parseInt(modelId) : null,
+        type: LeadTypes.SEARCH_REQUEST,
+        status: 'pending',
+        search_params: {
+          custom: true,
+          custom_fields: recordFields
+            .filter((f) => !f.isHeading)
+            .map((f) => ({ label: f.label, value: f.value || '' })),
+        },
+      };
+
+      const { error: leadError } = await supabase.from('leads').insert([leadData]);
+      if (leadError) throw leadError;
+
+      // 3. Email a los destinatarios configurados (mismos que el form legacy)
+      const brandName = brandId ? brands.find((b) => b.id === brandId)?.name || '' : '';
+      const modelName = modelId ? models.find((m) => m.id.toString() === modelId)?.name || '' : '';
+      const subject =
+        brandName || modelName
+          ? `Solicitud de Búsqueda: ${`${brandName} ${modelName}`.trim()}`
+          : `Nueva solicitud: ${title || 'Buscamos por ti'}`;
+
+      const content = createDynamicLeadEmailTemplate({
+        leadTypeName: title || 'Nueva solicitud de búsqueda',
+        fields: recordFields,
+      });
+
+      const searchEmails =
+        client?.contact?.search_emails && client.contact.search_emails.length > 0
+          ? client.contact.search_emails
+          : [client?.contact?.email || ''];
+
+      await sendEmail({ to: searchEmails, subject, content });
+
+      setValues({});
+      setSelectedBrandId('');
+      setShowSuccessModal(true);
+    } catch (error: any) {
+      alert(
+        `❌ Hubo un error al enviar tu solicitud. Por favor intenta nuevamente.\n\n${
+          error?.message || ''
+        }`
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderDynamicField = (f: DynamicFormField, i: number) => {
+    const key = FIELD_KEY(i);
+    const value = values[key] || '';
+    const label = f.label || '';
+    const required = !!f.required;
+
+    switch (f.fieldType) {
+      case 'heading':
+        return (
+          <div key={key} className="border-t pt-6 mt-2">
+            <h3 className="text-lg font-semibold" style={headingStyle}>
+              {label}
+            </h3>
+          </div>
+        );
+      case 'brand':
+        return (
+          <Autocomplete
+            key={key}
+            label={label}
+            selectedKey={value}
+            onSelectionChange={(k) => {
+              const v = (k as string) || '';
+              setVal(i, v);
+              setSelectedBrandId(v);
+              const modelIdx = formFields.findIndex((ff) => ff.fieldType === 'model');
+              if (modelIdx >= 0) setVal(modelIdx, '');
+            }}
+            isRequired={required}
+            variant="bordered"
+            inputProps={{ classNames: inputClassNames }}
+          >
+            {brands.map((brand) => (
+              <AutocompleteItem key={brand.id}>
+                {brand.name}
+              </AutocompleteItem>
+            ))}
+          </Autocomplete>
+        );
+      case 'model':
+        return (
+          <Autocomplete
+            key={key}
+            label={label}
+            selectedKey={value}
+            onSelectionChange={(k) => setVal(i, (k as string) || '')}
+            isRequired={required}
+            isDisabled={!selectedBrandId}
+            variant="bordered"
+            inputProps={{ classNames: inputClassNames }}
+          >
+            {models.map((model) => (
+              <AutocompleteItem key={model.id.toString()}>
+                {model.name}
+              </AutocompleteItem>
+            ))}
+          </Autocomplete>
+        );
+      case 'select': {
+        const opts = (f.options || '')
+          .split(',')
+          .map((o) => o.trim())
+          .filter(Boolean);
+        return (
+          <Select
+            key={key}
+            label={label}
+            selectedKeys={value ? [value] : []}
+            onSelectionChange={(keys) => setVal(i, (Array.from(keys)[0] as string) || '')}
+            isRequired={required}
+            variant="bordered"
+            classNames={inputClassNames}
+          >
+            {opts.map((o) => (
+              <SelectItem key={o}>
+                {o}
+              </SelectItem>
+            ))}
+          </Select>
+        );
+      }
+      case 'textarea':
+        return (
+          <Textarea
+            key={key}
+            label={label}
+            value={value}
+            onValueChange={(v) => setVal(i, v)}
+            isRequired={required}
+            minRows={4}
+            variant="bordered"
+            classNames={inputClassNames}
+          />
+        );
+      default: {
+        const inputType =
+          f.fieldType === 'number'
+            ? 'number'
+            : f.fieldType === 'email'
+            ? 'email'
+            : f.fieldType === 'tel'
+            ? 'tel'
+            : 'text';
+        return (
+          <Input
+            key={key}
+            type={inputType}
+            label={label}
+            value={value}
+            onValueChange={(v) => setVal(i, v)}
+            isRequired={required}
+            variant="bordered"
+            classNames={inputClassNames}
+          />
+        );
+      }
+    }
+  };
+
+  return (
+    <div data-form-section="we-search-for-you">
+      {!embedded && title && (
+        <div className="text-center mb-10 max-w-3xl mx-auto">
+          <h1 className={titleClass} style={titleStyle}>
+            {title}
+          </h1>
+          {subtitle && (
+            <p className={subtitleClass} style={subtitleStyle}>
+              {subtitle}
+            </p>
+          )}
+        </div>
+      )}
+      <div className={embedded ? '' : 'max-w-2xl mx-auto'}>
+        <div className={embedded ? '' : cardClass} style={embedded ? undefined : cardStyle}>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {formFields.map((f, i) => renderDynamicField(f, i))}
+            <Button
+              type="submit"
+              color="primary"
+              fullWidth
+              className={
+                embedded
+                  ? 'font-semibold !text-white hover:opacity-90'
+                  : 'font-semibold bg-primary text-secondary hover:bg-primary/90 dark:bg-primary dark:text-secondary dark:hover:bg-primary/90'
+              }
+              style={buttonStyle}
+              isLoading={loading}
+            >
+              {t('weSearchForYou.form.submit')}
+            </Button>
+          </form>
+        </div>
+      </div>
+
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        leadType={LeadTypes.SEARCH_REQUEST}
+        customMessage={t('weSearchForYou.successMessage')}
+      />
+    </div>
+  );
+};
+
+const WeSearchForm = (props: FormStyleProps = {}) => {
+  if (props.formFields && props.formFields.length > 0) {
+    return <DynamicWeSearchForm {...props} />;
+  }
+  return <LegacyWeSearchForm {...props} />;
 };
 
 export default WeSearchForm;
