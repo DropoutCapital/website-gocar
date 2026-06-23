@@ -10,6 +10,8 @@ export type TrackingAndConsentProps = {
   pixelId?: string;
   gtmId?: string;
   ga4Id?: string;
+  vambeClientId?: string;
+  vambeChannelId?: string;
   requireConsent: boolean;
 };
 
@@ -26,6 +28,8 @@ export default function TrackingAndConsent({
   pixelId,
   gtmId,
   ga4Id,
+  vambeClientId,
+  vambeChannelId,
   requireConsent,
 }: TrackingAndConsentProps) {
   const [consent, setConsent] = useState<ConsentState>('unknown');
@@ -106,6 +110,26 @@ export default function TrackingAndConsent({
               gtag('config', '${ga4Id}');
             `}
           </Script>
+        </>
+      )}
+
+      {/* Vambe webchat: widget funcional (chat), no tracking. No se gatea por
+          consentimiento de cookies — se carga siempre que esté configurado.
+          El config inline va ANTES del script externo: webchat.js lee
+          window.embeddedWebchatConfig una sola vez al ejecutar y si no existe
+          aborta sin reintentar. next/script respeta el orden con misma estrategia. */}
+      {vambeClientId && vambeChannelId && (
+        <>
+          <Script id='vambe-config' strategy='afterInteractive'>
+            {`window.embeddedWebchatConfig = { clientId: ${JSON.stringify(
+              vambeClientId
+            )}, channelId: ${JSON.stringify(vambeChannelId)} };`}
+          </Script>
+          <Script
+            id='vambe-webchat'
+            src='https://vambeai.com/webchat.js'
+            strategy='afterInteractive'
+          />
         </>
       )}
 
