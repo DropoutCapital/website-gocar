@@ -161,6 +161,8 @@ export default async function RootLayout({
                     pixelId={integrations.pixel_id || undefined}
                     gtmId={integrations.gtm_id || undefined}
                     ga4Id={integrations.ga4_id || undefined}
+                    vambeClientId={integrations.vambe_client_id || undefined}
+                    vambeChannelId={integrations.vambe_channel_id || undefined}
                     requireConsent={integrations.require_cookie_consent ?? true}
                   />
                   <RoutePrefetcher routes={['/', '/financing', '/consignments', '/buy-direct', '/we-search-for-you', '/contact', '/about', '/vehicles']} />

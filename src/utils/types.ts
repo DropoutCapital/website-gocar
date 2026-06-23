@@ -375,6 +375,8 @@ export interface ClientWebsiteConfig {
     gtm_id: string;
     ga4_id?: string;
     require_cookie_consent?: boolean;
+    vambe_client_id?: string;
+    vambe_channel_id?: string;
   };
 
   is_enabled: boolean;
