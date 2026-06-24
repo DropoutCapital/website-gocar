@@ -21,6 +21,7 @@ import useThemeStore from '@/store/useThemeStore';
 import ThemeToggle from '../ThemeToggle';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
 import { useTranslation } from '@/i18n/hooks/useTranslation';
+import { MegaNavbar, type MegaNavbarProps } from '@/components/builder2/sections/layout/MegaNavbar';
 
 // Extract logo from builder config as fallback when client.logo is null
 export function extractBuilderLogo(client: any): string | null {
@@ -227,6 +228,62 @@ function extractBuilderNav(
   }
 }
 
+// Si el navbar configurado en la home es un HeroMega, devuelve sus props para
+// renderizar el MISMO navbar (MegaNavbar) en el resto de rutas → consistente con
+// la home (mismo logo, links, CTA, efecto), sin el chrome del Navbar genérico
+// (toggle de tema / idioma). Devuelve null para tenants que no usan HeroMega.
+function extractMegaNavbar(
+  client: any,
+  theme: 'light' | 'dark',
+  translations: Record<string, string> | null
+): MegaNavbarProps | null {
+  try {
+    const config = client?.client_website_config;
+    const cfg = Array.isArray(config) ? config[0] : config;
+    if (!cfg?.is_enabled || !cfg?.elements_structure) return null;
+    const blob = resolveCompressedBlob(cfg.elements_structure, 'home', theme);
+    if (!blob) return null;
+    const nodes = decodeNavNodes(blob);
+    if (!nodes) return null;
+    const nav = findNavNode(nodes);
+    if (!nav || nav.node?.type?.resolvedName !== 'HeroMega') return null;
+
+    const props = nav.node.props || {};
+    const rawLinks: any[] = Array.isArray(props.links) ? props.links : [];
+    const links = rawLinks
+      .filter((l) => l && typeof l.url === 'string' && l.url && typeof l.text === 'string')
+      .map((l, i) => {
+        let text = l.text as string;
+        const key = `home::${nav.id}::link_${i}`;
+        if (translations && key in translations && translations[key]) text = translations[key];
+        return { text, url: l.url as string };
+      });
+    if (links.length === 0) return null;
+
+    let ctaText = props.ctaText as string | undefined;
+    const ctaKey = `home::${nav.id}::ctaText`;
+    if (translations && ctaKey in translations && translations[ctaKey]) ctaText = translations[ctaKey];
+
+    const primary = client?.theme?.light?.primary || '#dc2626';
+    return {
+      links,
+      ctaText,
+      ctaUrl: props.ctaUrl,
+      logoUrl: props.logoUrl || client?.logo_dark || client?.logo || '',
+      showLogo: props.showLogo !== false,
+      logoHeight: props.logoHeight || 40,
+      companyName: client?.name || 'Automotora',
+      navTextColor: props.navTextColor || '#ffffff',
+      ctaBgColor: props.ctaBgColor || primary,
+      ctaTextColor: props.ctaTextColor || '#ffffff',
+      fullWidth: !!props.fullWidth,
+      // hasHero/isEditor por defecto false → barra blanca sólida fija en estas rutas.
+    };
+  } catch {
+    return null;
+  }
+}
+
 const Navbar = () => {
   const { client } = useClientStore();
   const { theme, setTheme } = useThemeStore();
@@ -271,6 +328,13 @@ const Navbar = () => {
     [client, theme, translations]
   );
 
+  // Tenants cuyo navbar de la home es HeroMega: renderizar el MISMO navbar
+  // (MegaNavbar) también acá, en vez del Navbar genérico → consistencia total.
+  const megaNav = useMemo(
+    () => extractMegaNavbar(client, theme === 'dark' ? 'dark' : 'light', translations),
+    [client, theme, translations]
+  );
+
   // Filtra páginas de sistema que el cliente ocultó desde el builder (#46): esas
   // rutas dan 404, así que el navbar no debe linkearlas — ni desde el navbar
   // configurado ni desde el por defecto.
@@ -306,6 +370,13 @@ const Navbar = () => {
     () => (!client?.logo && !client?.logo_dark) ? extractBuilderLogo(client) : null,
     [client]
   );
+
+  // HeroMega tenant → mismo navbar que la home (barra blanca sólida fija acá,
+  // sin hero). Todos los hooks ya se ejecutaron arriba, así que el return condicional
+  // es seguro.
+  if (megaNav) {
+    return <MegaNavbar {...megaNav} />;
+  }
 
   const logoSrc = theme === 'dark'
     ? (client?.logo_dark || client?.logo || builderLogo)
