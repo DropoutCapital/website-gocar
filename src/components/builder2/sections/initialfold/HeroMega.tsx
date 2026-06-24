@@ -99,9 +99,20 @@ export const HeroMega = ({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [brandId, setBrandId] = useState('');
   const [modelId, setModelId] = useState('');
+  const [scrolled, setScrolled] = useState(false);
 
   // Reset model when brand changes
   useEffect(() => { setModelId(''); }, [brandId]);
+
+  // Efecto scroll en el sitio público: transparente sobre el hero arriba → barra
+  // blanca sólida al scrollear. En el editor no aplica.
+  useEffect(() => {
+    if (isEnabled) return;
+    const onScroll = () => setScrolled(window.scrollY > 50);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [isEnabled]);
 
   const primaryColor = client?.theme?.light?.primary || '#dc2626';
   const finalCtaBgColor = ctaBgColor || primaryColor;
@@ -145,6 +156,16 @@ export const HeroMega = ({
 
   const containerWidth = fullWidth ? 'max-w-full' : 'max-w-7xl';
 
+  // Navbar fijo en el sitio público con efecto scroll, igual que el Navbar del
+  // resto del sitio: transparente sobre el hero arriba (texto blanco + logo en
+  // blanco vía filtro, porque el único logo de carssale es oscuro) y barra BLANCA
+  // sólida al scrollear o con el menú móvil abierto (texto y logo en su color).
+  // En el editor se mantiene relative/transparente (no flota sobre el canvas).
+  const navIsFixed = !isEnabled;
+  const navSolid = navIsFixed && (scrolled || mobileOpen);
+  const navText = navSolid ? '#1f2937' : navTextColor;
+  const barLogoUrl = finalLogoUrl;
+
   return (
     <section
       ref={(el: HTMLElement | null) => { if (el) connectors.connect(el); }}
@@ -164,23 +185,47 @@ export const HeroMega = ({
         style={{ backgroundColor: overlayColor, opacity: overlayOpacity }}
       />
 
-      {/* Navbar */}
-      <nav className="relative z-20 w-full">
+      {/* Spacer: conserva la altura del navbar en el flujo del hero cuando el
+          navbar pasa a fixed (sitio público), para que el contenido no salte. */}
+      {navIsFixed && <div aria-hidden="true" style={{ height: 80 }} />}
+
+      {/* Navbar — fijo y transparente→sólido en público; relative en el editor. */}
+      <nav
+        className={
+          navIsFixed
+            ? 'fixed top-0 left-0 right-0 z-50 transition-colors duration-300'
+            : 'relative z-20 w-full'
+        }
+        style={
+          navIsFixed
+            ? {
+                backgroundColor: navSolid ? 'rgba(255,255,255,0.92)' : 'transparent',
+                backdropFilter: navSolid ? 'blur(8px)' : undefined,
+                boxShadow: navSolid ? '0 1px 3px rgba(0,0,0,0.12)' : 'none',
+              }
+            : undefined
+        }
+      >
         <div className={`${containerWidth} mx-auto px-4 sm:px-6 lg:px-8`}>
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <div className="flex items-center flex-shrink-0">
-              {showLogo && finalLogoUrl ? (
+              {showLogo && barLogoUrl ? (
                 <Link href="/" onClick={handleNavClick}>
                   <img
-                    src={finalLogoUrl}
+                    src={barLogoUrl}
                     alt={companyName}
                     className="w-auto object-contain"
-                    style={{ height: `${logoHeight}px` }}
+                    style={{
+                      height: `${logoHeight}px`,
+                      // Logo oscuro → blanco mientras el navbar es transparente
+                      // sobre el hero; color normal cuando la barra es blanca.
+                      filter: navSolid ? undefined : 'brightness(0) invert(1)',
+                    }}
                   />
                 </Link>
               ) : (
-                <Link href="/" onClick={handleNavClick} className="text-xl font-bold" style={{ color: navTextColor }}>
+                <Link href="/" onClick={handleNavClick} className="text-xl font-bold" style={{ color: navText }}>
                   {companyName}
                 </Link>
               )}
@@ -192,11 +237,11 @@ export const HeroMega = ({
                 const { href, isExternal } = resolveNavLink(link.url);
                 const cls = "px-3 py-2 text-sm font-semibold rounded-md transition-opacity hover:opacity-70 whitespace-nowrap";
                 return isExternal ? (
-                  <a key={i} href={href} target="_blank" rel="noopener noreferrer" onClick={handleNavClick} className={cls} style={{ color: navTextColor }}>
+                  <a key={i} href={href} target="_blank" rel="noopener noreferrer" onClick={handleNavClick} className={cls} style={{ color: navText }}>
                     {link.text}
                   </a>
                 ) : (
-                  <Link key={i} href={href} onClick={handleNavClick} className={cls} style={{ color: navTextColor }}>
+                  <Link key={i} href={href} onClick={handleNavClick} className={cls} style={{ color: navText }}>
                     {link.text}
                   </Link>
                 );
@@ -219,7 +264,7 @@ export const HeroMega = ({
                 className="lg:hidden p-1.5 rounded-md transition-opacity hover:opacity-80"
                 aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
               >
-                <MenuIcon open={mobileOpen} color={navTextColor} />
+                <MenuIcon open={mobileOpen} color={navText} />
               </button>
             </div>
           </div>
