@@ -5,15 +5,18 @@ import { useBuilderReady } from '@/hooks/useBuilderReady';
 import Navbar from './Navbar';
 
 /**
- * Shows the static Navbar ONLY when the builder is not active (or as a degraded
- * fallback if the builder structure fails to load).
- * When builder is enabled, the BuilderNavbar inside the builder data handles
- * navigation — except on /vehicles and /embed, where the builder doesn't render
- * and the static Navbar is used (it reads the client's configured links).
+ * Navbar como fuente única. El dealer configura SU navbar en la home (dentro del
+ * builder). Ese navbar se muestra en todo el sitio vía el Navbar estático del
+ * layout, que lee los links/CTA configurados desde pages.home (extractBuilderNav).
  *
- * While the builder structure is still loading we render NOTHING instead of the
- * static navbar, to avoid the 3-4s flash of hardcoded defaults before the real
- * builder navbar appears. See useBuilderReady.
+ * Solo la home renderiza su navbar inline (para editarlo WYSIWYG en el builder);
+ * en el resto de páginas usamos el Navbar del layout. Antes cada página secundaria
+ * traía su propia copia del navbar horneada en su árbol, que quedaba
+ * desincronizada (o ausente) cuando el dealer editaba la home. El nodo navbar de
+ * las páginas no-home se elimina en getPageBuilderData para que no salga duplicado.
+ *
+ * Mientras la estructura del builder aún carga renderizamos NADA en vez del navbar
+ * estático, para evitar el flash de defaults hardcodeados. Ver useBuilderReady.
  */
 export default function ConditionalNavbar() {
   const pathname = usePathname();
@@ -30,13 +33,10 @@ export default function ConditionalNavbar() {
   // Non-builder client, or structure failed to load (timeout) → static navbar
   if (status === 'fallback') return <Navbar />;
 
-  // status === 'ready': builder structure loaded.
-  // /vehicles is not a builder page, so it still needs the static navbar
-  // (which now reads the client's configured links from the builder).
-  if (pathname?.startsWith('/vehicles')) {
-    return <Navbar />;
-  }
+  // status === 'ready': solo la home renderiza su navbar inline (editable en el
+  // builder). El resto de páginas usan el Navbar del layout, que lee el navbar
+  // configurado en la home → fuente única, consistente en todo el sitio.
+  if (pathname === '/') return null;
 
-  // Other pages: the builder renders its own navbar inside the page.
-  return null;
+  return <Navbar />;
 }

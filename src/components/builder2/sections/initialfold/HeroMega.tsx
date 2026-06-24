@@ -9,6 +9,7 @@ import useVehiclesStore from '@/store/useVehiclesStore';
 import useVehicleFiltersStore from '@/store/useVehicleFiltersStore';
 import { resolveNavLink } from '@/utils/functions';
 import { Search } from 'lucide-react';
+import { MegaNavbar } from '@/components/builder2/sections/layout/MegaNavbar';
 
 interface NavLink {
   text: string;
@@ -36,24 +37,6 @@ interface HeroMegaProps {
   heroHeight?: number;
   fullWidth?: boolean;
 }
-
-/** Hamburger / X icon */
-const MenuIcon = ({ open, color }: { open: boolean; color: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    {open ? (
-      <>
-        <line x1="18" y1="6" x2="6" y2="18" />
-        <line x1="6" y1="6" x2="18" y2="18" />
-      </>
-    ) : (
-      <>
-        <line x1="3" y1="6" x2="21" y2="6" />
-        <line x1="3" y1="12" x2="21" y2="12" />
-        <line x1="3" y1="18" x2="21" y2="18" />
-      </>
-    )}
-  </svg>
-);
 
 const ChevronDown = ({ color }: { color: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
@@ -96,7 +79,6 @@ export const HeroMega = ({
   const { setFilters } = useVehicleFiltersStore();
   const router = useRouter();
 
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [brandId, setBrandId] = useState('');
   const [modelId, setModelId] = useState('');
 
@@ -105,7 +87,6 @@ export const HeroMega = ({
 
   const primaryColor = client?.theme?.light?.primary || '#dc2626';
   const finalCtaBgColor = ctaBgColor || primaryColor;
-  const cta = resolveNavLink(ctaUrl);
   const companyName = client?.name || 'Automotora';
   const finalLogoUrl = logoUrl || client?.logo_dark || client?.logo || '';
 
@@ -164,104 +145,28 @@ export const HeroMega = ({
         style={{ backgroundColor: overlayColor, opacity: overlayOpacity }}
       />
 
-      {/* Navbar */}
-      <nav className="relative z-20 w-full">
-        <div className={`${containerWidth} mx-auto px-4 sm:px-6 lg:px-8`}>
-          <div className="flex items-center justify-between h-20">
-            {/* Logo */}
-            <div className="flex items-center flex-shrink-0">
-              {showLogo && finalLogoUrl ? (
-                <Link href="/" onClick={handleNavClick}>
-                  <img
-                    src={finalLogoUrl}
-                    alt={companyName}
-                    className="w-auto object-contain"
-                    style={{ height: `${logoHeight}px` }}
-                  />
-                </Link>
-              ) : (
-                <Link href="/" onClick={handleNavClick} className="text-xl font-bold" style={{ color: navTextColor }}>
-                  {companyName}
-                </Link>
-              )}
-            </div>
+      {/* Spacer: el MegaNavbar es fixed en público (overlay); reponemos su alto
+          (h-16) para que el contenido del hero no quede tapado. En el editor el
+          MegaNavbar es relative (en flujo) y no hace falta spacer. */}
+      {!isEnabled && <div aria-hidden="true" style={{ height: 64 }} />}
 
-            {/* Desktop links */}
-            <div className="hidden lg:flex items-center gap-1">
-              {links.map((link, i) => {
-                const { href, isExternal } = resolveNavLink(link.url);
-                const cls = "px-3 py-2 text-sm font-semibold rounded-md transition-opacity hover:opacity-70 whitespace-nowrap";
-                return isExternal ? (
-                  <a key={i} href={href} target="_blank" rel="noopener noreferrer" onClick={handleNavClick} className={cls} style={{ color: navTextColor }}>
-                    {link.text}
-                  </a>
-                ) : (
-                  <Link key={i} href={href} onClick={handleNavClick} className={cls} style={{ color: navTextColor }}>
-                    {link.text}
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Right */}
-            <div className="flex items-center gap-3">
-              <Link
-                href={cta.href}
-                {...(cta.isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                onClick={handleNavClick}
-                className="hidden lg:block px-5 py-2.5 text-sm font-semibold rounded-md transition-opacity hover:opacity-90"
-                style={{ backgroundColor: finalCtaBgColor, color: ctaTextColor }}
-              >
-                {ctaText}
-              </Link>
-              <button
-                onClick={() => setMobileOpen(!mobileOpen)}
-                className="lg:hidden p-1.5 rounded-md transition-opacity hover:opacity-80"
-                aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
-              >
-                <MenuIcon open={mobileOpen} color={navTextColor} />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile menu */}
-        {mobileOpen && (
-          <div className="lg:hidden relative z-20 mx-4 mb-2 rounded-2xl overflow-hidden bg-white shadow-xl">
-            <ul className="px-1 py-1">
-              {links.map((link, i) => {
-                const { href, isExternal } = resolveNavLink(link.url);
-                const cls = "block w-full rounded-xl px-4 py-3 text-base font-medium text-gray-800 hover:bg-gray-50";
-                const onClick = (e: React.MouseEvent) => { handleNavClick(e); setMobileOpen(false); };
-                return (
-                  <li key={i} className="list-none">
-                    {isExternal ? (
-                      <a href={href} target="_blank" rel="noopener noreferrer" onClick={onClick} className={cls}>
-                        {link.text}
-                      </a>
-                    ) : (
-                      <Link href={href} onClick={onClick} className={cls}>
-                        {link.text}
-                      </Link>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-            <div className="p-3 border-t border-gray-100">
-              <Link
-                href={cta.href}
-                {...(cta.isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                onClick={(e) => { handleNavClick(e); setMobileOpen(false); }}
-                className="flex items-center justify-center w-full px-4 py-2.5 text-sm font-semibold rounded-xl"
-                style={{ backgroundColor: finalCtaBgColor, color: ctaTextColor }}
-              >
-                {ctaText}
-              </Link>
-            </div>
-          </div>
-        )}
-      </nav>
+      {/* Navbar del hero, compartido con el resto de rutas (ver MegaNavbar). */}
+      <MegaNavbar
+        hasHero
+        isEditor={isEnabled}
+        links={links}
+        ctaText={ctaText}
+        ctaUrl={ctaUrl}
+        logoUrl={finalLogoUrl}
+        showLogo={showLogo}
+        logoHeight={logoHeight}
+        companyName={companyName}
+        navTextColor={navTextColor}
+        ctaBgColor={finalCtaBgColor}
+        ctaTextColor={ctaTextColor}
+        fullWidth={fullWidth}
+        onNavClick={handleNavClick}
+      />
 
       {/* Hero content */}
       <div className={`relative z-10 flex-1 flex flex-col justify-center ${containerWidth} w-full mx-auto px-4 sm:px-6 lg:px-8 py-12`}>

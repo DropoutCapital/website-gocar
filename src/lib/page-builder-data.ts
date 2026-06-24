@@ -10,6 +10,9 @@ const RESOLVER_NAMES = new Set([
   'div', 'p', 'span', 'img', 'Unknown',
 ]);
 
+// Nodos navbar que se eliminan de las páginas no-home (ver stripNavbarNodes).
+const NAVBAR_RESOLVED_NAMES = new Set(['BuilderNavbar', 'NavbarSimple']);
+
 /**
  * Sanitizes CraftJS node tree — removes unknown components, fixes ROOT, cleans orphans.
  * Same logic as page.tsx's sanitizeCraftData.
@@ -149,6 +152,60 @@ function applyTranslations(state: any, pageSlug: string, translations: Record<st
 }
 
 /**
+ * Elimina los nodos navbar (BuilderNavbar/NavbarSimple) y su subárbol de un estado
+ * Craft.js ya descomprimido/saneado. Se aplica en páginas NO-home: el navbar es
+ * fuente única — lo configura el dealer en la home y se renderiza en todo el sitio
+ * vía el Navbar del layout (ver ConditionalNavbar). El navbar horneado por página
+ * sobra y, peor, queda desincronizado cuando el dealer edita la home.
+ *
+ * Muta y devuelve el mismo objeto (es un blob fresco recién descomprimido, no
+ * compartido con la caché). Limpia también las referencias colgantes en `nodes`
+ * y `linkedNodes` de los nodos restantes.
+ */
+function stripNavbarNodes(state: any): any {
+  if (!state || typeof state !== 'object') return state;
+
+  const isWrapped = state.nodes && typeof state.nodes === 'object';
+  const nodes: Record<string, any> = isWrapped ? state.nodes : state;
+
+  const navRoots = Object.entries(nodes)
+    .filter(([, n]: [string, any]) => NAVBAR_RESOLVED_NAMES.has(n?.type?.resolvedName))
+    .map(([id]) => id);
+  if (navRoots.length === 0) return state;
+
+  // Recolectar cada navbar + todo su subárbol (hijos en `nodes` y `linkedNodes`).
+  const toRemove = new Set<string>();
+  const stack = [...navRoots];
+  while (stack.length) {
+    const id = stack.pop() as string;
+    if (toRemove.has(id)) continue;
+    toRemove.add(id);
+    const node = nodes[id];
+    if (!node) continue;
+    if (Array.isArray(node.nodes)) stack.push(...node.nodes);
+    if (node.linkedNodes && typeof node.linkedNodes === 'object') {
+      stack.push(...(Object.values(node.linkedNodes) as string[]));
+    }
+  }
+
+  for (const id of toRemove) delete nodes[id];
+
+  for (const node of Object.values(nodes)) {
+    if (Array.isArray((node as any).nodes)) {
+      (node as any).nodes = (node as any).nodes.filter((c: string) => !toRemove.has(c));
+    }
+    const ln = (node as any).linkedNodes;
+    if (ln && typeof ln === 'object') {
+      for (const k of Object.keys(ln)) {
+        if (toRemove.has(ln[k])) delete ln[k];
+      }
+    }
+  }
+
+  return state;
+}
+
+/**
  * Extracts and decompresses builder data for a specific page from the website config.
  * Supports v3 (multi-page), v2 (home-only dual-theme), and legacy formats.
  */
@@ -162,7 +219,11 @@ export function getPageBuilderData(
 
   const decompress = (compressed: string) => {
     const state = decompressState(compressed);
-    return translations ? applyTranslations(state, pageSlug, translations) : state;
+    const translated = translations ? applyTranslations(state, pageSlug, translations) : state;
+    // El navbar es fuente única (configurado en la home, renderizado por el Navbar
+    // del layout). En páginas no-home eliminamos el navbar horneado para que no
+    // salga duplicado ni desincronizado. El editor del builder NO pasa por aquí.
+    return pageSlug === 'home' ? translated : stripNavbarNodes(translated);
   };
 
   // elements_structure may be a string (text column) or already-parsed object (jsonb column)
