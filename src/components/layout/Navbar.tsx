@@ -148,6 +148,34 @@ function navFromNode(
   return { links, cta };
 }
 
+// Páginas de sistema que el cliente ocultó/eliminó desde el builder (envelope v3,
+// campo `hiddenSystemPages` — ver #46). Self-contained a propósito: importar de
+// page-builder-data arrastraría BuilderRenderer al bundle de /vehicles. 'home'
+// nunca se oculta.
+function getHiddenSystemSlugs(client: any): string[] {
+  try {
+    const config = client?.client_website_config;
+    const cfg = Array.isArray(config) ? config[0] : config;
+    const structure = cfg?.elements_structure;
+    if (!structure) return [];
+    let envelope: any = structure;
+    if (typeof structure !== 'object') {
+      try { envelope = JSON.parse(String(structure)); } catch { return []; }
+    }
+    const hidden = envelope?.hiddenSystemPages;
+    return Array.isArray(hidden)
+      ? hidden.filter((s: any) => typeof s === 'string' && s !== 'home')
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+// '/we-search-for-you' → 'we-search-for-you' para comparar contra hiddenSystemPages.
+function hrefToSlug(href: string): string {
+  return (href || '').replace(/^\//, '').replace(/[?#].*$/, '');
+}
+
 /**
  * Extrae el navbar que el cliente configuró en el builder (links + CTA). Lo usa el
  * Navbar del layout para mostrar el MISMO navbar configurado en todas las páginas
@@ -243,8 +271,16 @@ const Navbar = () => {
     [client, theme, translations]
   );
 
-  const navigation = builderNav ? builderNav.links : defaultNavigation;
-  const cta = builderNav ? builderNav.cta : { name: t('navigation.links.contact'), href: '/contact' };
+  // Filtra páginas de sistema que el cliente ocultó desde el builder (#46): esas
+  // rutas dan 404, así que el navbar no debe linkearlas — ni desde el navbar
+  // configurado ni desde el por defecto.
+  const hiddenSlugs = useMemo(() => new Set(getHiddenSystemSlugs(client)), [client]);
+
+  const navigation = (builderNav ? builderNav.links : defaultNavigation).filter(
+    (item) => !hiddenSlugs.has(hrefToSlug(item.href))
+  );
+  const rawCta = builderNav ? builderNav.cta : { name: t('navigation.links.contact'), href: '/contact' };
+  const cta = rawCta && !hiddenSlugs.has(hrefToSlug(rawCta.href)) ? rawCta : null;
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 50);
