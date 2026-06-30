@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Editor, Frame, useNode } from '@craftjs/core';
 
 // =====================
@@ -80,6 +80,9 @@ import WeSearchForm from '@/components/forms/WeSearchForm';
 import ContactForm from '@/components/forms/ContactForm';
 import useClientStore from '@/store/useClientStore';
 import { useTranslation } from '@/i18n/hooks/useTranslation';
+import { supabase } from '@/lib/supabase';
+import { Dealership } from '@/utils/types';
+import OpeningHours from '@/sections/home/OpeningHours';
 
 // Hook: returns true when viewing in a non-default language (i.e. needs translations)
 function useIsTranslated() {
@@ -300,6 +303,22 @@ const ContactFormEmbed = ({ bgColor = '#ffffff', textColor = '#111827', accentCo
   const { connectors } = useNode();
   const { cardBg, cardBorder, infoBg, subtextColor } = deriveColors(bgColor);
   const { client } = useClientStore();
+
+  // Trae la sucursal para mostrar telefono/email/horario reales desde la
+  // plataforma (dealerships), igual que el componente "Como llegar".
+  const [dealership, setDealership] = useState<Dealership | null>(null);
+  useEffect(() => {
+    const fetchDealership = async () => {
+      if (!client?.id) return;
+      const { data } = await supabase.from('dealerships').select('*').eq('client_id', client.id);
+      if (data && data.length > 0) setDealership(data[0] as Dealership);
+    };
+    fetchDealership();
+  }, [client?.id]);
+
+  const contactPhone = dealership?.phone || client?.contact?.phone;
+  const contactEmail = dealership?.email || client?.contact?.email;
+
   return (
     <div ref={(el: HTMLDivElement | null) => { if (el) connectors.connect(el); }} style={{ backgroundColor: bgColor, color: textColor }} className="w-full py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
       {title && <div className="text-center mb-10 max-w-3xl mx-auto"><h1 className="text-3xl sm:text-4xl font-extrabold" style={{ color: textColor }}>{title}</h1>{subtitle && <p className="mt-4 text-lg" style={{ color: subtextColor }}>{subtitle}</p>}</div>}
@@ -311,9 +330,9 @@ const ContactFormEmbed = ({ bgColor = '#ffffff', textColor = '#111827', accentCo
           <div className="rounded-xl p-8 border" style={{ backgroundColor: infoBg, borderColor: cardBorder }}>
             <h2 className="text-2xl font-bold mb-6" style={{ color: textColor }}>{'Informaci\u00f3n de contacto'}</h2>
             <div className="space-y-6">
-              {client?.contact?.phone && <div><h3 className="text-lg font-medium mb-2" style={{ color: textColor }}>{'Tel\u00e9fono'}</h3><p className="text-sm" style={{ color: subtextColor }}>{client.contact.phone}</p></div>}
-              {client?.contact?.email && <div><h3 className="text-lg font-medium mb-2" style={{ color: textColor }}>{'Email'}</h3><p className="text-sm" style={{ color: subtextColor }}>{client.contact.email}</p></div>}
-              <div><h3 className="text-lg font-medium mb-2" style={{ color: textColor }}>{'Horario de atenci\u00f3n'}</h3><div className="space-y-1"><p className="text-sm" style={{ color: subtextColor }}>{'Lunes a Viernes: 9:00 - 18:00'}</p><p className="text-sm" style={{ color: subtextColor }}>{'S\u00e1bado: 10:00 - 14:00'}</p></div></div>
+              {contactPhone && <div><h3 className="text-lg font-medium mb-2" style={{ color: textColor }}>{'Tel\u00e9fono'}</h3><p className="text-sm" style={{ color: subtextColor }}>{contactPhone}</p></div>}
+              {contactEmail && <div><h3 className="text-lg font-medium mb-2" style={{ color: textColor }}>{'Email'}</h3><p className="text-sm" style={{ color: subtextColor }}>{contactEmail}</p></div>}
+              {dealership?.opening_hours && <div><h3 className="text-lg font-medium mb-2" style={{ color: textColor }}>{'Horario de atenci\u00f3n'}</h3><OpeningHours hours={dealership.opening_hours} labelColor={subtextColor} valueColor={subtextColor} /></div>}
             </div>
           </div>
         </div>
