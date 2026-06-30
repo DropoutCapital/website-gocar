@@ -476,7 +476,7 @@ export default function VehicleDetailSection({
                   {v.discount_percentage ? (
                     <span className="inline-flex items-center h-7 px-2 rounded-md text-xs font-semibold bg-red-50 text-red-600 ring-1 ring-red-200 dark:bg-red-500/10 dark:text-red-300 dark:ring-red-500/30">
                       <Icon icon="mdi:tag-outline" className="text-base" />
-                      -{v.discount_percentage}%
+                      -{Math.round(v.discount_percentage)}%
                     </span>
                   ) : null}
                 </div>
