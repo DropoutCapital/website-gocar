@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Input, Select, SelectItem, Textarea } from '@heroui/react';
 import useClientStore from '@/store/useClientStore';
 import useCustomerStore from '@/store/useCustomerStore';
 import { supabase } from '@/lib/supabase';
-import { Mail } from '@/utils/types';
+import { Mail, Dealership } from '@/utils/types';
+import OpeningHours from '@/sections/home/OpeningHours';
 
 interface FormStyleProps {
   title?: string;
@@ -55,6 +56,7 @@ const ContactForm = ({ title, subtitle, bgColor, textColor, accentColor, embedde
   const { client } = useClientStore();
   const { initializeCustomer } = useCustomerStore();
   const [loading, setLoading] = useState(false);
+  const [dealership, setDealership] = useState<Dealership | null>(null);
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -63,6 +65,27 @@ const ContactForm = ({ title, subtitle, bgColor, textColor, accentColor, embedde
     reason: '',
     message: '',
   });
+
+  // Trae la sucursal para mostrar dirección/teléfono/email/horario reales desde
+  // la plataforma (dealerships), igual que el componente "¿Cómo llegar?".
+  useEffect(() => {
+    const fetchDealership = async () => {
+      if (!client?.id) return;
+      const { data } = await supabase
+        .from('dealerships')
+        .select('*')
+        .eq('client_id', client.id);
+      if (data && data.length > 0) {
+        setDealership(data[0] as Dealership);
+      }
+    };
+    fetchDealership();
+  }, [client?.id]);
+
+  // Datos de contacto: prioriza la sucursal, con fallback al contacto del cliente.
+  const contactAddress = dealership?.address || client?.contact?.address;
+  const contactEmail = dealership?.email || client?.contact?.email;
+  const contactPhone = dealership?.phone || client?.contact?.phone;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,36 +274,36 @@ ${formData.message}
               Información de Contacto
             </h2>
 
-            {/*  <div>
-              <h3 className={subHeadingClass} style={headingStyle}>
-                Ubicación
-              </h3>
-              <p className={`mt-2 ${bodyClass}`} style={bodyStyle}>
-                {client?.contact?.address}
-              </p>
-            </div> */}
+            {contactAddress && (
+              <div>
+                <h3 className={subHeadingClass} style={headingStyle}>
+                  Ubicación
+                </h3>
+                <p className={`mt-2 ${bodyClass}`} style={bodyStyle}>
+                  {contactAddress}
+                </p>
+              </div>
+            )}
 
-            <div>
-              <h3 className={subHeadingClass} style={headingStyle}>
-                Horario
-              </h3>
-              <p className={`mt-2 ${bodyClass}`} style={bodyStyle}>
-                Lunes a Viernes: 9:00 AM - 6:00 PM
-                <br />
-                Sábado: 10:00 AM - 2:00 PM
-                <br />
-                Domingo: Cerrado
-              </p>
-            </div>
+            {dealership?.opening_hours && (
+              <div>
+                <h3 className={subHeadingClass} style={headingStyle}>
+                  Horario
+                </h3>
+                <div className={`mt-2 ${bodyClass}`} style={bodyStyle}>
+                  <OpeningHours hours={dealership.opening_hours} />
+                </div>
+              </div>
+            )}
 
             <div>
               <h3 className={subHeadingClass} style={headingStyle}>
                 Contacto Directo
               </h3>
               <p className={`mt-2 ${bodyClass}`} style={bodyStyle}>
-                Email: {client?.contact?.email}
+                Email: {contactEmail}
                 <br />
-                Teléfono: {client?.contact?.phone}
+                Teléfono: {contactPhone}
               </p>
             </div>
           </div>
