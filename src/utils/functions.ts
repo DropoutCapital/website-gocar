@@ -108,3 +108,43 @@ export const resolveNavLink = (
   if (firstSegment.includes('.')) return { href: `https://${link}`, isExternal: true };
   return { href: `/${link}`, isExternal: false };
 };
+
+/**
+ * Navegación del botón primario de los Heros (típicamente "Ver vehículos").
+ *
+ * Bug que arregla: los Heros hacían scroll a CUALQUIER `[class*="vehicle"]`
+ * de la página e IGNORABAN el link que el cliente ponía en el builder, así que
+ * "/vehicles" o una URL completa nunca navegaban. Solo el `#ancla` debe hacer
+ * scroll a una sección de la misma página; una ruta o URL real debe navegar.
+ *
+ * - `#seccion` → scroll suave a esa sección si existe (comportamiento legacy).
+ * - `/ruta` → navega en la misma pestaña.
+ * - `http…` / dominio pelado → navega en pestaña nueva.
+ * - vacío → no hace nada y devuelve false (el Hero puede usar su fallback).
+ *
+ * Devuelve true si manejó el click. Llamar SOLO fuera del editor.
+ */
+export const navigateBuilderCta = (rawLink?: string | null): boolean => {
+  const link = (rawLink || '').trim();
+  if (!link) return false;
+  // Ancla (#seccion): scroll a esa sección de la misma página.
+  if (link.startsWith('#')) {
+    const id = link.slice(1);
+    const el =
+      document.getElementById(id) ||
+      document.querySelector(`[data-section="${id}"]`) ||
+      document.querySelector('[data-section="vehicles"]') ||
+      document.getElementById('vehicles-section') ||
+      document.querySelector('[class*="vehicle"]');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return true;
+  }
+  // Ruta interna o URL externa: navegar respetando el link del builder.
+  const { href, isExternal } = resolveNavLink(link);
+  if (isExternal) {
+    window.open(href, '_blank');
+  } else {
+    window.location.href = href;
+  }
+  return true;
+};
