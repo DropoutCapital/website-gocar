@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNode, useEditor } from '@craftjs/core';
 import { Button } from '@/components/ui/button';
-import { normalizeBuilderLink, isBlankHtml } from '@/utils/functions';
+import { normalizeBuilderLink, isBlankHtml, navigateBuilderCta } from '@/utils/functions';
 
 interface HeroBasicProps {
   title?: string;
@@ -61,21 +61,11 @@ export const HeroBasic = ({
     right: 'justify-end',
   }[alignment];
 
-  // Scroll to target section or navigate
+  // Respeta el link del builder: navega si es ruta/URL, scroll si es #ancla.
   const scrollToVehicles = (e: React.MouseEvent) => {
     e.preventDefault();
     if (isEnabled) return;
-
-    const target =
-      document.querySelector('[data-section="vehicles"]') ||
-      document.getElementById('vehicles-section') ||
-      document.querySelector('[class*="vehicle"]');
-
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else if (buttonLink) {
-      window.location.href = buttonLink;
-    }
+    navigateBuilderCta(buttonLink);
   };
 
   return (

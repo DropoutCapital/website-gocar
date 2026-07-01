@@ -1,7 +1,7 @@
 import React from 'react';
-import { useNode } from '@craftjs/core';
+import { useNode, useEditor } from '@craftjs/core';
 import { Button } from '@/components/ui/button';
-import { normalizeBuilderLink, isBlankHtml } from '@/utils/functions';
+import { normalizeBuilderLink, isBlankHtml, navigateBuilderCta } from '@/utils/functions';
 
 interface HeroWithVideoEmbedProps {
   title?: string;
@@ -74,6 +74,10 @@ export const HeroWithVideoEmbed = ({
     selected: state.events.selected,
   }));
 
+  const { isEnabled } = useEditor((state) => ({
+    isEnabled: state.options.enabled,
+  }));
+
   const embedUrl = getBackgroundEmbedUrl(videoUrl || '');
 
   const overlayStyle: React.CSSProperties = {
@@ -81,21 +85,11 @@ export const HeroWithVideoEmbed = ({
     opacity: overlayOpacity,
   };
 
+  // Respeta el link del builder: navega si es ruta/URL, scroll si es #ancla.
   const scrollToVehicles = (e: React.MouseEvent) => {
     e.preventDefault();
-
-    const vehicleSection =
-      document.querySelector('[data-section="vehicles"]') ||
-      document.getElementById('vehicles-section') ||
-      document.querySelector('.VehicleGrid') ||
-      document.querySelector('.vehicles-section') ||
-      document.querySelector('[class*="vehicle"]');
-
-    if (vehicleSection) {
-      vehicleSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else if (buttonLink) {
-      window.location.href = normalizeBuilderLink(buttonLink);
-    }
+    if (isEnabled) return;
+    navigateBuilderCta(buttonLink);
   };
 
   return (

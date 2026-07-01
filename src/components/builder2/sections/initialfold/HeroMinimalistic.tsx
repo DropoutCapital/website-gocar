@@ -4,7 +4,7 @@ import React from 'react';
 import { useNode, useEditor } from '@craftjs/core';
 import { Button } from '@/components/ui/button';
 import { Element } from '@craftjs/core';
-import { isBlankHtml } from '@/utils/functions';
+import { isBlankHtml, navigateBuilderCta } from '@/utils/functions';
 
 interface HeroMinimalisticProps {
   title?: string;
@@ -56,47 +56,10 @@ export const HeroMinimalistic = ({
     isEnabled: state.options.enabled,
   }));
 
+  // Respeta el link del builder: navega si es ruta/URL, scroll si es #ancla.
   const scrollToSection = (sectionId: string) => {
-    if (isEnabled) {
-      return; // No hacer nada en modo editor
-    }
-
-    // En el modo editor, simplemente registramos que se ha hecho clic
-    if (sectionId.startsWith('#')) {
-      const targetId = sectionId.substring(1); // Remover el # inicial
-
-      // Buscar por ID
-      const section = document.getElementById(targetId);
-
-      // Si no encuentra por ID, buscar por clase o por atributo data-section
-      const alternativeSection =
-        section ||
-        document.querySelector(`[data-section="${targetId}"]`) ||
-        document.querySelector(`.section-${targetId}`);
-
-      if (alternativeSection) {
-        alternativeSection.scrollIntoView({ behavior: 'smooth' });
-        console.log(`Scrolling to section: ${targetId}`);
-        return;
-      }
-
-      // Si no hemos encontrado la sección, intentamos buscar componentes con nombres similares
-      const possibleSections = document.querySelectorAll(
-        '[class*="vehicle"], [id*="vehicle"], [data-section*="vehicle"]'
-      );
-      if (possibleSections.length > 0) {
-        possibleSections[0].scrollIntoView({ behavior: 'smooth' });
-        console.log(`Scrolling to vehicle section via fuzzy match`);
-        return;
-      }
-
-      console.log(
-        `Section ${targetId} not found. This is normal in editor mode.`
-      );
-    } else {
-      // Es una URL externa, navegamos a ella
-      window.open(sectionId, '_blank');
-    }
+    if (isEnabled) return; // No hacer nada en modo editor
+    navigateBuilderCta(sectionId);
   };
 
   return (

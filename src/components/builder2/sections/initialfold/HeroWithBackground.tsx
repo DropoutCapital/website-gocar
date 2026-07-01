@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNode, useEditor } from '@craftjs/core';
 import { Button } from '@/components/ui/button';
-import { normalizeBuilderLink, isBlankHtml } from '@/utils/functions';
+import { normalizeBuilderLink, isBlankHtml, navigateBuilderCta } from '@/utils/functions';
 
 interface HeroWithBackgroundProps {
   title?: string;
@@ -46,79 +46,20 @@ export const HeroWithBackground = ({
     selected: state.events.selected,
   }));
 
+  const { isEnabled } = useEditor((state) => ({
+    isEnabled: state.options.enabled,
+  }));
+
   const overlayStyle = {
     backgroundColor: overlayColor,
     opacity: overlayOpacity,
   };
 
-  // Function to scroll to vehicles section
+  // Respeta el link del builder: navega si es ruta/URL, scroll si es #ancla.
   const scrollToVehicles = (e: React.MouseEvent) => {
     e.preventDefault();
-    console.log(
-      'Attempting to scroll to vehicles section from HeroWithBackground'
-    );
-
-    // Try multiple selector approaches
-    const vehicleSection =
-      document.querySelector('[data-section="vehicles"]') ||
-      document.getElementById('vehicles-section') ||
-      document.querySelector('.VehicleGrid') ||
-      document.querySelector('.vehicles-section') ||
-      document.querySelector('[class*="vehicle"]');
-
-    if (vehicleSection) {
-      console.log('Found vehicle section, scrolling now');
-
-      // Try multiple scroll methods
-      try {
-        // Method 1: scrollIntoView
-        vehicleSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-        // Method 2: If the above doesn't work consistently in the builder
-        setTimeout(() => {
-          const yOffset =
-            vehicleSection.getBoundingClientRect().top +
-            window.pageYOffset -
-            50;
-          window.scrollTo({
-            top: yOffset,
-            behavior: 'smooth',
-          });
-        }, 100);
-      } catch (error) {
-        console.error('Error scrolling:', error);
-
-        // Fallback method 3: direct position scroll
-        const yOffset =
-          vehicleSection.getBoundingClientRect().top + window.pageYOffset - 50;
-        window.scrollTo(0, yOffset);
-      }
-    } else {
-      console.log('Vehicle section not found, trying alternative methods');
-
-      // Fallback: try to find any vehicle-related sections by text content
-      const headings = Array.from(
-        document.querySelectorAll('h1, h2, h3, h4, h5, h6')
-      );
-      const vehicleHeading = headings.find(
-        (h) =>
-          h.textContent?.toLowerCase().includes('vehículo') ||
-          h.textContent?.toLowerCase().includes('vehiculo') ||
-          h.textContent?.toLowerCase().includes('auto') ||
-          h.textContent?.toLowerCase().includes('inventario')
-      );
-
-      if (vehicleHeading) {
-        console.log('Found vehicle heading, scrolling to it');
-        vehicleHeading.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else {
-        console.log('No vehicle section found at all');
-        // If all else fails and we have a buttonLink, navigate to it
-        if (buttonLink) {
-          window.location.href = buttonLink;
-        }
-      }
-    }
+    if (isEnabled) return;
+    navigateBuilderCta(buttonLink);
   };
 
   return (
